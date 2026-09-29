@@ -1,55 +1,54 @@
-# Wraith House — Web 3D prototype
+# Wraith House
 
-This project upgrades the earlier 2.5D demo into a real WebGL/Three.js first-person ghost-hunt prototype.
+Single-player Three.js horror prototype, served as a static site on Vercel.
 
-## Included
-- Real 3D WebGL scene with a two-floor haunted building blockout.
-- First-person mouse look + WASD + sprint.
-- Dynamic flashlight, shadows, fog, ACES tone mapping and bloom.
-- Second-floor rotten-board break sequence with falling board physics animation and ghost alert.
-- Ghost AI chase/sleep behavior using the provided ghost image as a temporary 3D billboard.
-- Male/female investigator selection using the supplied character images as UI portraits.
-- 5 game modes, 120 generated contract steps each (600 total mission steps).
-- 100-coin mission rewards, persistent localStorage economy.
-- 52 tools in the equipment store; EMF, sleep dart and spirit camera have prototype gameplay behavior.
-- Vercel-compatible static structure.
-- `blender/haunted_house_builder.py`: Blender 4.x blockout-generation script with named breakable boards and export structure.
+[Deploy with Vercel](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fdev-shubh-madara%2Fghost-game)
 
-## Important production limitation
-Blender itself is not installed in the execution environment that produced this project. Therefore the included Blender script was prepared but could not be executed here to generate final `.blend`/`.glb` assets. The browser currently uses procedural Three.js geometry for the building. The supplied character photos are not sufficient to create production-quality rigged 3D humans automatically; final characters require proper 3D models, UVs, materials, rigs and animations.
+Import this repository, select **Other**, leave the build command empty, and serve the repository root (`.`). No environment variables or backend are required. Three.js 0.180.0 loads from jsDelivr, so internet access is required. A Vercel account and the final Deploy action are still required.
 
-## Run locally
-Because the code uses ES modules, serve it over HTTP instead of double-clicking index.html:
+## Play
+
+Run `python -m http.server 8000`, then open http://localhost:8000 in a desktop browser with WebGL2 and pointer lock. Click Enter the House to capture the mouse. Escape pauses; click Enter to resume.
+
+| Control | Action |
+| --- | --- |
+| WASD / mouse | Move / look |
+| Shift | Sprint |
+| F | Flashlight |
+| E | Stairs, doors, marked objects and seals |
+| 1 / 2 / 3 | EMF / sleep dart / camera |
+| Space | Use selected equipment |
+| H / Q | Consume a healing injector / salt ward |
+| Escape | Pause and release mouse |
+
+## Implemented
+
+- Two floors, interactive stair transfer, doors, furniture, architectural details, fog, shadows and bloom.
+- Corrected movement with independent key defaults, wall/prop collision and cleared inputs on focus loss.
+- Scene-attached flashlight and permanent torch upgrade.
+- Ghost pursuit, sanity, fear, stamina, failure and retry. The supernatural entity can phase through walls.
+- Real opening beneath rotten boards; collapsing boards and player fall with sanity damage.
+- Five modes with 150 generated contract steps each. These reuse five objective mechanics, not 750 handcrafted missions. Modes change task sequences and chase speed.
+- Marked EMF scans, cursed-object retrieval and seal restoration; aimed, unobstructed entity photographs; timed survival.
+- Guarded +100-coin rewards. Separate mode progress, inventory and coins persist in browser localStorage. Invalid saved values are sanitized.
+- EMF, camera and sleep dart as standard tools. Dart disables the ghost for 30 seconds with a 35-second cooldown.
+- Working purchases: healing injector (200 coins), 12-second salt ward (250), permanent flashlight upgrade (400).
+- Synthesized footstep, equipment and event sounds.
+
+## Honest scope
+
+This is a procedural browser prototype, not a finished AAA game. Investigator selections provide gameplay traits; there are no rigged human character models. Multiplayer, mobile touch controls, final audio, custom GLB characters and the remaining equipment concepts are not implemented. The store does not sell unimplemented concepts.
+
+`blender/haunted_house_builder.py` remains a starter blockout script. Blender was not available during this update, and no Blender execution or finished Blender assets are claimed. Production assets require modelling, materials, rigging, animation and GLB integration.
+
+Old coin balances migrate into the versioned save. Old generic objective progress is not migrated because the objective mechanics changed. Browser storage is local to the origin and is not a secure online economy. The explicit one-click Vercel link creates a project; it does not mean a deployment has already occurred.
+
+## Verification
+
+JavaScript syntax and the regression test passed during this update. The regression test initializes the game with actual Three.js math/geometry and stubbed browser/rendering APIs, then checks movement, collisions, flashlight attachment, mission count, reward guards and save recovery. It is not a visual or GPU test. The browser binary download failed in the development environment, so visual browser validation remains outstanding.
+
+To repeat the regression test, obtain `three@0.180.0/build/three.core.js`, save it as `/tmp/three.core.mjs`, then run:
 
 ```bash
-python -m http.server 8000
+THREE_CORE=/tmp/three.core.mjs node tests/game-regression.mjs
 ```
-
-Then open `http://localhost:8000`.
-
-## Deploy to Vercel
-1. Put this folder in a GitHub repository.
-2. Import that repository into Vercel.
-3. Framework preset: `Other`.
-4. Build command: leave empty.
-5. Output directory: `.`
-6. Deploy.
-
-## Blender pipeline for the production version
-1. Open Blender 4.x.
-2. Run `blender/haunted_house_builder.py` from the Scripting workspace.
-3. Replace the blockout with detailed meshes; use PBR materials and UVs.
-4. Create/obtain properly licensed male/female 3D character models and a rigged ghost model.
-5. Add walk/run/crouch/interaction/attack/hunt animations.
-6. Export optimized GLB files into `models/`.
-7. Integrate them through Three.js `GLTFLoader` and retain low-poly collision proxies.
-8. For true multiplayer, add an authoritative WebSocket game server. Vercel can host the web frontend, but a continuously connected realtime game server is normally deployed separately.
-
-## Controls
-- WASD — move
-- Mouse — look
-- Shift — sprint
-- F — flashlight
-- E — interact / stairs / collect evidence
-- 1/2/3 — select tool
-- Space — use selected tool
