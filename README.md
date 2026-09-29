@@ -1,54 +1,61 @@
 # Wraith House
 
-Single-player Three.js horror prototype, served as a static site on Vercel.
+A single-player browser horror prototype built with Three.js. Static Vercel hosting; no backend or environment variables required. Import the repository with preset **Other**, empty build command and root output directory (`.`). A previous automatic Vercel deployment was blocked; GitHub push success does not imply deployment success.
 
-[Deploy with Vercel](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fdev-shubh-madara%2Fghost-game)
+[Import into Vercel](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fdev-shubh-madara%2Fghost-game)
 
-Import this repository, select **Other**, leave the build command empty, and serve the repository root (`.`). No environment variables or backend are required. Three.js 0.180.0 loads from jsDelivr, so internet access is required. A Vercel account and the final Deploy action are still required.
+## Current game
 
-## Play
+- **Two 1,000 × 1,000 metre floors**, world coordinates -500 to +500 on X/Z. Nearby 40m sectors are streamed as instanced geometry, with at most 25 active sectors. This is a repeated procedural environment, not two square kilometres of individually authored scenery.
+- Walk up/down the central stair flight. **Space jumps**. Stairs require no E interaction or teleportation. Gravity, landings, ceiling checks and collapsing rotten boards are implemented.
+- **Safe start:** no ghost during the first 60 seconds of active gameplay. The sanctuary within 22m of the spawn remains protected on both floors forever. Returning hides/removes the threat; leaving after the grace period respawns it 20m farther from the sanctuary. Retry grants a fresh grace period.
+- The ghost deliberately ignores walls and can move vertically between floors.
+- Each contract requires **hint pickup → find named item → pick up item → use it for the objective**. Press E near the sanctuary desk to collect a note. The journal records the item name, floor, sector and coordinates; an objective marker and distance guide the search. Return the item to the ritual pedestal outside the sanctuary.
+- Five modes, 150 generated contract steps per mode. Investigation uses an EMF scan; Nightmare requires a nearby apparition photo; Exorcism/Rescue consume the required item; Hardcore starts a timed hunt. These reuse mechanics and are not 750 handcrafted missions.
+- Standard EMF, camera and 30-second sleep dart; healing, salt-ward and permanent torch-upgrade purchases. Coins/inventory/completed progress persist locally. The current note/item stage resets when the page reloads.
+- Reward guards, failure/retry, sanity, stamina, flashlight, synthesized sounds and keyboard/mouse controls.
 
-Run `python -m http.server 8000`, then open http://localhost:8000 in a desktop browser with WebGL2 and pointer lock. Click Enter the House to capture the mouse. Escape pauses; click Enter to resume.
+## Controls
 
 | Control | Action |
 | --- | --- |
 | WASD / mouse | Move / look |
 | Shift | Sprint |
-| F | Flashlight |
-| E | Stairs, doors, marked objects and seals |
+| Space | Jump |
+| E | Pick up notes/items, use an item at the pedestal, interact with doors |
+| R or left mouse | Use selected equipment |
 | 1 / 2 / 3 | EMF / sleep dart / camera |
-| Space | Use selected equipment |
-| H / Q | Consume a healing injector / salt ward |
+| F | Flashlight |
+| H / Q | Consume healing injector / salt ward |
+| V | First-person / third-person view |
 | Escape | Pause and release mouse |
 
-## Implemented
+## Characters and Blender — status
 
-- Two floors, interactive stair transfer, doors, furniture, architectural details, fog, shadows and bloom.
-- Corrected movement with independent key defaults, wall/prop collision and cleared inputs on focus loss.
-- Scene-attached flashlight and permanent torch upgrade.
-- Ghost pursuit, sanity, fear, stamina, failure and retry. The supernatural entity can phase through walls.
-- Real opening beneath rotten boards; collapsing boards and player fall with sanity damage.
-- Five modes with 150 generated contract steps each. These reuse five objective mechanics, not 750 handcrafted missions. Modes change task sequences and chase speed.
-- Marked EMF scans, cursed-object retrieval and seal restoration; aimed, unobstructed entity photographs; timed survival.
-- Guarded +100-coin rewards. Separate mode progress, inventory and coins persist in browser localStorage. Invalid saved values are sanitized.
-- EMF, camera and sleep dart as standard tools. Dart disables the ghost for 30 seconds with a 35-second cooldown.
-- Working purchases: healing injector (200 coins), 12-second salt ward (250), permanent flashlight upgrade (400).
-- Synthesized footstep, equipment and event sounds.
+The supplied male/female reference images are the selection portraits. Runtime fallbacks include a pale long-haired ghost with a dress, olive-clothed investigator meshes and first-person sleeves/hands. **These are procedural stand-ins, not photoreal reconstructions of the references.** The third-person fallback has simple limb motion; it is not a professional rig.
 
-## Honest scope
+Laptop access was not connected during this update. No laptop access, Blender execution, generated GLB files or completed photoreal models are claimed.
 
-This is a procedural browser prototype, not a finished AAA game. Investigator selections provide gameplay traits; there are no rigged human character models. Multiplayer, mobile touch controls, final audio, custom GLB characters and the remaining equipment concepts are not implemented. The store does not sell unimplemented concepts.
+`blender/build_reference_characters.py` creates separate new Blender scenes and exports starter ghost/Ethan/Maya meshes. It does not delete the user's existing scene. It is a starting point for sculpting, UV work, materials and rigging, not an automatic photoreal reconstruction tool. Run from the repository root in an authorized Blender environment:
 
-`blender/haunted_house_builder.py` remains a starter blockout script. Blender was not available during this update, and no Blender execution or finished Blender assets are claimed. Production assets require modelling, materials, rigging, animation and GLB integration.
+```bash
+blender --background --python blender/build_reference_characters.py -- --output models
+```
 
-Old coin balances migrate into the versioned save. Old generic objective progress is not migrated because the objective mechanics changed. Browser storage is local to the origin and is not a secure online economy. The explicit one-click Vercel link creates a project; it does not mean a deployment has already occurred.
+The script writes `ghost.glb`, `ethan.glb`, `maya.glb`, a `.blend` file and enables `models/manifest.json` only after all exports succeed. The browser loads these files through GLTFLoader when enabled, otherwise it keeps the fallbacks. Review the exported appearance before pushing enabled assets. The script passed Python syntax checks but has not been run in Blender here. The older house-builder script is retained as a historical small blockout and does not define the runtime kilometre-scale world.
 
-## Verification
+## Local run and validation
 
-JavaScript syntax and the regression test passed during this update. The regression test initializes the game with actual Three.js math/geometry and stubbed browser/rendering APIs, then checks movement, collisions, flashlight attachment, mission count, reward guards and save recovery. It is not a visual or GPU test. The browser binary download failed in the development environment, so visual browser validation remains outstanding.
+```bash
+python -m http.server 8000
+```
 
-To repeat the regression test, obtain `three@0.180.0/build/three.core.js`, save it as `/tmp/three.core.mjs`, then run:
+Open http://localhost:8000 in a desktop browser with WebGL2 and pointer lock. Internet access is required for pinned Three.js 0.180.0 modules from jsDelivr. Mobile touch controls and multiplayer are not implemented.
+
+The gameplay regression suite uses actual Three.js geometry/math with stubbed rendering/browser APIs. It checks initialization, WASD, kilometre boundaries, stairs up/down, jump/landing, objective sequencing and reward protection, grace period and sanctuary enforcement on both floors, bounded chunk streaming, and corrupt-save recovery. Obtain `three@0.180.0/build/three.core.js` and save it as `/tmp/three.core.mjs`:
 
 ```bash
 THREE_CORE=/tmp/three.core.mjs node tests/game-regression.mjs
 ```
+
+A headless Chromium WebGL smoke test also passed module initialization, pointer lock, note pickup, movement, jumping, view switching and a hidden ghost at spawn with no JavaScript errors. Screenshots were inspected; the test served the same pinned Three.js modules locally because the browser could not fetch the CDN from this environment. This does not certify performance on every GPU. World repetition, modest starter meshes and synthesized effects remain production limitations.

@@ -25,6 +25,7 @@ button{font:inherit;color:inherit;cursor:pointer}canvas{position:fixed;inset:0;w
 .floor{position:absolute;right:26px;bottom:26px;font-size:9px;letter-spacing:.18em;color:#9ba39f}.tip{position:absolute;left:50%;top:61%;transform:translateX(-50%);padding:8px 12px;background:#050708cc;border:1px solid #ffffff1c;font-size:9px;letter-spacing:.1em;color:#d7ddd9}
 .modal{position:fixed;z-index:30;inset:0;background:#000c;display:grid;place-items:center;backdrop-filter:blur(10px)}.box{width:min(940px,92vw);max-height:86vh;overflow:auto;padding:28px;background:#090c0d;border:1px solid #ffffff20}.shop{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:7px}.tool{padding:12px;border:1px solid #ffffff1b;background:#0e1112;text-align:left}.tool:hover{border-color:#ffffff45}.tool b{font-size:11px}.tool p{font-size:9px;color:var(--muted);min-height:28px}.tool em{color:var(--acid);font-style:normal;font-size:10px}.close{float:right;background:#15191a;border:1px solid #ffffff20;padding:8px 12px}
 @media(max-width:700px){.panel{left:3vw;width:94vw;padding:20px}.modes{grid-template-columns:repeat(3,1fr)}.inv .slot{width:86px}.stats{width:215px}.objective{left:15px;top:15px}.coins{right:15px;top:15px}}
+.journal{position:absolute;right:24px;top:90px;max-width:290px;padding:15px;background:#050708d9;border:1px solid #ffffff25;font-size:11px;line-height:1.65;color:#c3c9bd}.journal strong{color:var(--acid);letter-spacing:.12em;font-size:10px}.portrait{background-size:cover;background-position:center top;height:110px}.portrait:after{display:none}.card[data-char="male"] .portrait{background-image:url('assets/ethan-reference.png')}.card[data-char="female"] .portrait{background-image:url('assets/maya-reference.png')}.micro{font-size:10px}.panel{max-height:94vh;overflow:auto}@media(max-width:700px){.journal{top:130px;right:12px;max-width:200px;font-size:10px}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 </head>
@@ -34,7 +35,7 @@ button{font:inherit;color:inherit;cursor:pointer}canvas{position:fixed;inset:0;w
 <section id="menu" class="panel">
   <div class="ey">SINGLE-PLAYER PARANORMAL INVESTIGATION</div>
   <h1>WRAITH<br><span>HOUSE</span></h1>
-  <p class="lead">Search a two-floor haunted residence, complete evidence contracts, earn coins, unlock specialist equipment and survive an entity that reacts to noise and proximity.</p>
+  <p class="lead">Explore two vast floors. Read abandoned notes, recover the objects they describe, and finish each ritual. The starting sanctuary always keeps the entity out.</p>
   <div class="label">CHOOSE INVESTIGATOR</div>
   <div class="chars">
     <button class="card selected" data-char="male"><div class="portrait"></div><b>ETHAN</b><small>Field Technician · faster sprint</small></button>
@@ -42,7 +43,7 @@ button{font:inherit;color:inherit;cursor:pointer}canvas{position:fixed;inset:0;w
   </div>
   <div class="label">GAME MODE</div><div id="modes" class="modes"></div>
   <div class="actions"><button id="play" class="primary">ENTER THE HOUSE</button><button id="shopBtn" class="secondary">EQUIPMENT STORE</button></div>
-  <div class="micro">WASD move · Mouse look · Shift sprint · F flashlight · E interact / stairs · 1/2/3 tools · Space use tool · H heal · Q ward · Esc pause</div>
+  <div class="micro">WASD move · Mouse look · Shift sprint · F flashlight · E pick up / interact · Space jump · 1/2/3 tools · R use tool · H heal · Q ward · V change view · Esc pause</div>
 </section>
 
 <aside id="hud" class="hidden">
@@ -54,7 +55,7 @@ button{font:inherit;color:inherit;cursor:pointer}canvas{position:fixed;inset:0;w
     <div class="stat"><span>SANITY</span><div class="bar"><i id="sanB"></i></div><b id="san">100%</b></div>
   </div>
   <div class="inv"><button class="slot active">1 · EMF</button><button class="slot">2 · SLEEP DART</button><button class="slot">3 · CAMERA</button></div>
-  <div id="alert" class="alert hidden">ENTITY ALERTED</div><div id="tip" class="tip hidden"></div><div id="floor" class="floor">GROUND FLOOR</div><div class="cross"></div>
+  <div id="alert" class="alert hidden">ENTITY ALERTED</div><div id="tip" class="tip hidden"></div><div id="floor" class="floor">GROUND FLOOR</div><div class="cross"></div><div id="journal" class="journal"></div>
 </aside>
 
 <section id="shop" class="modal hidden"><div class="box"><button id="close" class="close">✕</button><div class="ey">FIELD ARMORY</div><h2>Equipment Store</h2><p>Balance: <b id="bal">0 ◈</b></p><div id="toolGrid" class="shop"></div></div></section>
@@ -63,6 +64,7 @@ button{font:inherit;color:inherit;cursor:pointer}canvas{position:fixed;inset:0;w
 <section id="failed" class="modal hidden"><div class="box" style="max-width:460px"><div class="ey">SIGNAL LOST</div><h2>The house claimed you.</h2><p>Your completed contracts and coins are safe. Retry this objective with full sanity.</p><button id="retry" class="primary">RETURN TO THE FOYER</button></div></section>
 <script type="module">
 import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {PointerLockControls} from 'three/addons/controls/PointerLockControls.js';
 import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
 import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
@@ -76,11 +78,11 @@ function audioStart(){try{audioCtx??=new AudioContext();audioCtx.resume();}catch
 function tone(hz,duration,volume=.05){if(!audioCtx)return;const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='triangle';o.frequency.setValueAtTime(hz,audioCtx.currentTime);g.gain.setValueAtTime(volume,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+duration);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+duration);}
 const clamp=THREE.MathUtils.clamp, lerp=THREE.MathUtils.lerp;
 const renderer=new THREE.WebGLRenderer({canvas:$('#game'),antialias:true,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.72;
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x020405);scene.fog=new THREE.FogExp2(0x07090a,.035);
 const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.04,130);camera.position.set(0,1.68,8.8);
 const controls=new PointerLockControls(camera,renderer.domElement);
-const composer=new EffectComposer(renderer);composer.addPass(new RenderPass(scene,camera));composer.addPass(new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),.32,.62,.86));
+const composer=new EffectComposer(renderer);const scenePass=new RenderPass(scene,camera);composer.addPass(scenePass);composer.addPass(new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),.32,.62,.86));
 
 function noiseTexture(base=[48,46,41],amount=28,size=256){
   const c=document.createElement('canvas');c.width=c.height=size;const g=c.getContext('2d'),im=g.createImageData(size,size);
@@ -101,27 +103,24 @@ function meshBox(name,p,s,mat=wallMat,opts={}){
   if(opts.collider) staticColliders.push(o);
   return o
 }
-meshBox('Ground',[0,-.18,0],[25,.36,21],floorMat);
-meshBox('UpperNorth',[0,2.92,-3],[25,.22,15],floorMat);
-meshBox('UpperSouth',[0,2.92,9.1],[25,.22,2.8],floorMat);
-for(const x of [-8,8])meshBox('UpperSide',[x,2.92,6.1],[9,.22,3.2],floorMat);
-for(const y of [1.35,4.35]){
-  meshBox('WallL',[-12.3,y,0],[.35,3,21],wallMat,{collider:true});
-  meshBox('WallR',[12.3,y,0],[.35,3,21],wallMat,{collider:true});
-  meshBox('WallB',[0,y,-10.3],[25,3,.35],wallMat,{collider:true});
-  meshBox('WallF',[0,y,10.3],[25,3,.35],wallMat,{collider:true});
-}
+const WORLD_HALF=500,SAFE_RADIUS=22,SPAWN=new THREE.Vector3(0,1.68,8.8);
+meshBox('Ground',[0,-.18,0],[1000,.36,1000],floorMat);
+// Upper slab is an actual 1km square with holes for stairs and rotten boards.
+const slabShape=new THREE.Shape();slabShape.moveTo(-500,-500);slabShape.lineTo(500,-500);slabShape.lineTo(500,500);slabShape.lineTo(-500,500);slabShape.closePath();
+for(const [x0,z0,x1,z1] of [[-1.8,-3.1,1.8,3.1],[-3.5,4.5,3.5,7.7]]){const hole=new THREE.Path();hole.moveTo(x0,z0);hole.lineTo(x0,z1);hole.lineTo(x1,z1);hole.lineTo(x1,z0);hole.closePath();slabShape.holes.push(hole);}
+const slabMat=floorMat.clone();slabMat.side=THREE.DoubleSide;
+const slab=new THREE.Mesh(new THREE.ShapeGeometry(slabShape),slabMat);slab.rotation.x=Math.PI/2;slab.position.y=3;slab.receiveShadow=true;scene.add(slab);
+meshBox('Roof',[0,6.1,0],[1000,.2,1000],wallMat);
+for(const y of [1.5,4.5]){for(const x of [-500,500])meshBox('Boundary',[x,y,0],[.3,3,1000],wallMat,{collider:true});for(const z of [-500,500])meshBox('Boundary',[0,y,z],[1000,3,.3],wallMat,{collider:true});}
 // Room layout with door openings instead of solid strips across the whole floor.
 for(const y of [1.35,4.35]){
   for(const [x,z,w,d] of [[-5,-6,.28,7],[-5,6,.28,7],[4.5,-6,.28,6.4],[4.5,6,.28,6.4],[-8,0,7,.28],[8,0,7,.28]]){
     meshBox('Partition',[x,y,z],[w,3,d],wallMat,{collider:true});
   }
 }
-// Stair volume is visual only; E interaction changes level.
-for(let i=0;i<12;i++) meshBox('Stair',[0,.1+i*.23,2.4-i*.42],[3.2,.2,.56],darkWood);
-const railMat=metalMat;
-for(const sx of [-1.75,1.75]){meshBox('rail',[sx,1.55,.1],[.07,2.8,.07],railMat);for(let i=0;i<5;i++)meshBox('post',[sx,.65+i*.43,2.2-i*.72],[.05,1.25,.05],railMat)}
-
+// Walkable stairs: the support surface follows this flight; no interaction teleport.
+for(let i=0;i<18;i++){const h=(i+1)/6;meshBox('Stair',[0,h/2,3-(i+.5)/3],[3.5,h,1/3+.01],darkWood);}
+for(const x of [-1.9,1.9])for(let i=0;i<10;i++)meshBox('Baluster',[x,.55+i/3,3-i*2/3],[.055,1.1,.055],metalMat);
 // Rotten second-floor corridor.
 for(let i=0;i<13;i++){const b=meshBox('RottenBoard',[-3+i*.5,3.08,6.1],[.44,.12,3.1],woodMat);b.userData={broken:false,vy:0,vr:(Math.random()-.5)*4};fragile.push(b)}
 // Furniture / props.
@@ -135,23 +134,18 @@ const doors=[];
 function addDoor(x,z,rot=0,y=0){const pivot=new THREE.Group();pivot.position.set(x,y,z);scene.add(pivot);const d=new THREE.Mesh(new THREE.BoxGeometry(1.6,2.45,.16),darkWood);d.position.set(.8,1.22,0);d.castShadow=true;pivot.add(d);pivot.rotation.y=rot;pivot.userData={open:false,target:rot,base:rot};doors.push(pivot);interactables.push(pivot);return pivot}
 addDoor(-5,-1.1,Math.PI/2);addDoor(4.5,1.2,Math.PI/2);addDoor(-5,1.2,Math.PI/2,3);addDoor(4.5,-1.2,Math.PI/2,3);
 
-// Windows and cold moonlight.
-for(const [x,z,y,rot] of [[-12.08,-5,1.5,Math.PI/2],[12.08,5,1.5,Math.PI/2],[-12.08,4,4.5,Math.PI/2],[12.08,-4,4.5,Math.PI/2]]){
-  const w=meshBox('window',[x,y,z],[2.3,1.2,.08],glassMat);w.rotation.y=rot;
-  const l=new THREE.PointLight(0x7ca1b5,2.3,8);l.position.set(x*.92,y,z);scene.add(l)
-}
-scene.add(new THREE.HemisphereLight(0x53636c,0x080707,.18));
+scene.add(new THREE.HemisphereLight(0x53636c,0x323029,1.05));
 const moon=new THREE.DirectionalLight(0xa7c8db,1.15);moon.position.set(-8,14,7);moon.castShadow=true;moon.shadow.mapSize.set(2048,2048);scene.add(moon);
 const practicals=[];
 for(const [x,z,y] of [[-7,-5,2.55],[7,-5,2.55],[-7,5,5.55],[7,5,5.55],[0,-4,2.55],[0,4,5.55]]){
-  const bulb=new THREE.PointLight(0xe7c58a,3.5,8,2);bulb.position.set(x,y,z);bulb.castShadow=false;bulb.userData.base=3.5+Math.random();scene.add(bulb);practicals.push(bulb);
+  const bulb=new THREE.PointLight(0xe7c58a,8,12,2);bulb.position.set(x,y,z);bulb.castShadow=false;bulb.userData.base=8+Math.random();scene.add(bulb);practicals.push(bulb);
   const fixture=meshBox('fixture',[x,y+.15,z],[.18,.08,.18],metalMat)
 }
 const flashlight=new THREE.SpotLight(0xe8f2ff,34,24,.36,.5,1.55);flashlight.position.set(.08,-.06,.02);camera.add(flashlight);flashlight.target.position.set(0,-.05,-7);camera.add(flashlight.target);scene.add(camera);
 
 // Architectural detail uses shared materials and modest mesh counts.
 for(const level of [0,3]){
-  for(const x of [-10,-6,-2,2,6,10])meshBox('ceiling beam',[x,level+2.72,0],[.18,.22,20],darkWood);
+  for(const x of [-10,-6,6,10])meshBox('ceiling beam',[x,level+2.72,0],[.18,.22,20],darkWood);
   for(const z of [-10,10]){meshBox('skirting',[0,level+.12,z],[24,.24,.08],darkWood);meshBox('cornice',[0,level+2.55,z],[24,.13,.14],darkWood);}
   for(const x of [-12,12])meshBox('skirting',[x,level+.12,0],[.08,.24,20],darkWood);
   for(const x of [-8,8]){
@@ -164,12 +158,47 @@ const dustGeo=new THREE.BufferGeometry(),dustCount=750,dpos=new Float32Array(dus
 for(let i=0;i<dustCount;i++){dpos[i*3]=(Math.random()-.5)*24;dpos[i*3+1]=Math.random()*6;dpos[i*3+2]=(Math.random()-.5)*20}
 dustGeo.setAttribute('position',new THREE.BufferAttribute(dpos,3));const dust=new THREE.Points(dustGeo,new THREE.PointsMaterial({color:0xb9b5aa,size:.018,transparent:true,opacity:.3,depthWrite:false}));scene.add(dust);
 
-// Ghost with layered translucent form.
-const ghost=new THREE.Group();const ghostMat=new THREE.MeshPhysicalMaterial({color:0xc2e0e4,transparent:true,opacity:.26,roughness:.12,transmission:.3,emissive:0x3f8b98,emissiveIntensity:1.25,depthWrite:false});
-const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.58,1.3,10,18),ghostMat);torso.position.y=1.15;ghost.add(torso);const head=new THREE.Mesh(new THREE.SphereGeometry(.45,24,18),ghostMat);head.position.y=2.1;ghost.add(head);
-for(const x of [-.15,.15]){const e=new THREE.Mesh(new THREE.SphereGeometry(.033,8,8),new THREE.MeshBasicMaterial({color:0xff3155}));e.position.set(x,2.16,-.41);ghost.add(e)}
-for(let i=0;i<10;i++){const strip=new THREE.Mesh(new THREE.PlaneGeometry(.25+.3*Math.random(),1.1+Math.random()),new THREE.MeshBasicMaterial({color:0x7ab0b6,transparent:true,opacity:.08,side:THREE.DoubleSide,depthWrite:false}));strip.position.set((Math.random()-.5)*1.2,.5,(Math.random()-.5)*.7);strip.rotation.y=Math.random()*Math.PI;ghost.add(strip)}
-const ghostGlow=new THREE.PointLight(0x58b0c2,3.8,9);ghostGlow.position.y=1.5;ghost.add(ghostGlow);ghost.position.set(8,.12,-6);scene.add(ghost);
+// Reference-inspired fallback mesh. Final sculpted/rigged Blender likeness is pending.
+const ghost=new THREE.Group();const ghostMat=new THREE.MeshStandardMaterial({color:0xc9d7d4,transparent:true,opacity:.58,roughness:.95,emissive:0x304744,emissiveIntensity:.35,side:THREE.DoubleSide,depthWrite:false});
+const torso=new THREE.Mesh(new THREE.CylinderGeometry(.24,.31,.72,20),ghostMat);torso.position.y=1.32;ghost.add(torso);
+const head=new THREE.Mesh(new THREE.SphereGeometry(.21,24,18),ghostMat);head.scale.set(.8,1.22,.85);head.position.y=1.96;ghost.add(head);
+const dress=new THREE.Mesh(new THREE.CylinderGeometry(.29,.66,1.3,32,8,true),ghostMat);dress.position.y=.64;const dv=dress.geometry.attributes.position;for(let i=0;i<dv.count;i++){const x=dv.getX(i),z=dv.getZ(i),a=Math.atan2(z,x),r=1+.045*Math.sin(a*13);dv.setX(i,x*r);dv.setZ(i,z*r);}dress.geometry.computeVertexNormals();ghost.add(dress);
+const hairMat=new THREE.MeshStandardMaterial({color:0x171e1d,roughness:1,transparent:true,opacity:.84});
+for(let i=0;i<22;i++){const a=i/22*Math.PI*2,x=Math.sin(a)*.19,z=Math.cos(a)*.17;if(z>.09&&Math.abs(x)<.12)continue;const lock=new THREE.Mesh(new THREE.CapsuleGeometry(.038,.6+(i%3)*.08,3,5),hairMat);lock.position.set(x,1.73,z);lock.rotation.z=-x*.5;ghost.add(lock);}
+for(const x of [-.078,.078]){const eye=new THREE.Mesh(new THREE.SphereGeometry(.045,10,8),new THREE.MeshBasicMaterial({color:0x101515}));eye.scale.y=.62;eye.position.set(x,1.99,.172);ghost.add(eye);}
+for(const x of [-.36,.36]){const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.065,.64,4,8),ghostMat);arm.position.set(x,1.17,.02);arm.rotation.z=x*.45;ghost.add(arm);}
+const ghostGlow=new THREE.PointLight(0x9ac9c5,1.5,6);ghostGlow.position.y=1.5;ghost.add(ghostGlow);ghost.position.set(80,.08,-80);ghost.visible=false;scene.add(ghost);
+// First-person olive sleeves, gloves and instrument, matching the reference clothing direction.
+const hands=new THREE.Group();camera.add(hands);
+const cloth=new THREE.MeshStandardMaterial({color:0x384333,roughness:1});
+const skin=new THREE.MeshStandardMaterial({color:0xbda18c,roughness:.9});
+for(const x of [-.27,.27]){const sleeve=new THREE.Mesh(new THREE.CapsuleGeometry(.072,.33,5,10),cloth);sleeve.rotation.x=1.05;sleeve.position.set(x,-.34,-.35);hands.add(sleeve);const hand=new THREE.Mesh(new THREE.SphereGeometry(.067,12,10),skin);hand.scale.set(.8,.7,1.15);hand.position.set(x,-.24,-.58);hands.add(hand);}
+const heldTool=new THREE.Mesh(new THREE.BoxGeometry(.13,.085,.19),new THREE.MeshStandardMaterial({color:0x222a25,roughness:.98}));heldTool.position.set(.23,-.23,-.67);hands.add(heldTool);const toolScreen=new THREE.Mesh(new THREE.PlaneGeometry(.08,.045),new THREE.MeshBasicMaterial({color:0x83af69}));toolScreen.position.set(.23,-.225,-.57);hands.add(toolScreen);
+// Stream a 5x5 grid of nearby 40m sectors. Each floor is 25x25 sectors.
+const chunkMap=new Map(),unitBox=new THREE.BoxGeometry(1,1,1);let collisionBoxes=[],staticBoxes=null,lastChunkKey='';
+function buildChunk(cx,cz){
+  const group=new THREE.Group(),boxes=[],sets=[[],[]],centerX=cx*40,centerZ=cz*40;
+  function add(x,y,z,w,h,d,mat=0,solid=false){sets[mat].push([x,y,z,w,h,d]);if(solid)boxes.push(new THREE.Box3(new THREE.Vector3(x-w/2,y-h/2,z-d/2),new THREE.Vector3(x+w/2,y+h/2,z+d/2)));}
+  if(cx!==0||cz!==0)for(const level of [0,3]){
+    for(const offset of [-12,12]){add(centerX+offset,level+1.5,centerZ-20,16,3,.28,0,true);add(centerX+20,level+1.5,centerZ+offset,.28,3,16,0,true);}
+    // Clear eight-metre openings through every sector boundary.
+    for(const offset of [-4.15,4.15]){add(centerX+offset,level+1.4,centerZ-19.8,.2,2.8,.4,1);add(centerX+19.8,level+1.4,centerZ+offset,.4,2.8,.2,1);}
+    add(centerX-11,level+.65,centerZ-9,2,.2,1.1,1,true);
+    for(const dx of [-.8,.8])for(const dz of [-.35,.35])add(centerX-11+dx,level+.3,centerZ-9+dz,.1,.6,.1,1);
+    add(centerX+13,level+1.1,centerZ-15,2.3,2.2,.6,1,true);
+    for(const x of [-15,15])add(centerX+x,level+2.8,centerZ,.18,.18,38,1);
+  }
+  sets.forEach((entries,i)=>{if(!entries.length)return;const inst=new THREE.InstancedMesh(unitBox,i?darkWood:wallMat,entries.length),matrix=new THREE.Matrix4();entries.forEach(([x,y,z,w,h,d],j)=>{matrix.compose(new THREE.Vector3(x,y,z),new THREE.Quaternion(),new THREE.Vector3(w,h,d));inst.setMatrixAt(j,matrix);});inst.castShadow=true;inst.receiveShadow=true;inst.instanceMatrix.needsUpdate=true;group.add(inst);});
+  scene.add(group);return {group,boxes};
+}
+function streamWorld(force=false){
+  const cx=clamp(Math.floor((camera.position.x+20)/40),-12,12),cz=clamp(Math.floor((camera.position.z+20)/40),-12,12),key=`${cx},${cz}`;
+  if(key===lastChunkKey&&!force)return;lastChunkKey=key;
+  if(!staticBoxes)staticBoxes=staticColliders.map(o=>new THREE.Box3().setFromObject(o));
+  const needed=new Set();for(let x=Math.max(-12,cx-2);x<=Math.min(12,cx+2);x++)for(let z=Math.max(-12,cz-2);z<=Math.min(12,cz+2);z++){const k=`${x},${z}`;needed.add(k);if(!chunkMap.has(k))chunkMap.set(k,buildChunk(x,z));}
+  for(const [k,c] of chunkMap)if(!needed.has(k)){scene.remove(c.group);c.group.traverse(o=>{if(o.isInstancedMesh)o.dispose();});chunkMap.delete(k);}
+  collisionBoxes=[...staticBoxes,...[...chunkMap.values()].flatMap(c=>c.boxes)];
+}
 
 const saved=readSave();
 let coins=saved.coins,mode=0,missionIndex=saved.progress[0],activeTool=0,started=false,floor=0,fear=0,sanity=100,stamina=100,alert=0,sleepUntil=0,woodTriggered=false,selectedChar='male',bob=0,lastStep=0;
@@ -178,18 +207,20 @@ $('#modes').innerHTML=modeNames.map((x,i)=>'<button class="mode '+(i===0?'select
 $$('.mode').forEach(b=>b.onclick=()=>{mode=+b.dataset.i;missionIndex=Math.min(149,saved.progress[mode]);placeObjective();$('#play').textContent=saved.progress[mode]>=150?'MODE COMPLETE':'ENTER THE HOUSE';$$('.mode').forEach(x=>x.classList.toggle('selected',x===b));hud()});
 $$('.card').forEach(b=>b.onclick=()=>{selectedChar=b.dataset.char;$$('.card').forEach(x=>x.classList.toggle('selected',x===b))});
 
-const locations=[{name:'study',x:-8,z:-6,floor:0},{name:'dining room',x:8,z:-6,floor:0},{name:'west bedroom',x:-8,z:6,floor:1},{name:'east bedroom',x:8,z:6,floor:1},{name:'foyer',x:0,z:8,floor:0},{name:'upper corridor',x:0,z:-6,floor:1}];
-const tasks=[['scan','Scan the marked anomaly with EMF'],['photo','Photograph the entity'],['collect','Recover the marked cursed object'],['seal','Restore the marked seal'],['survive','Survive a 20-second hunt']];
-const modeTaskLists=[[0,2,1],[4,1,0],[3,0,3],[2,4,2],[4,0,1]];
-const missions=Array.from({length:5},(_,m)=>Array.from({length:150},(_,i)=>{const task=tasks[modeTaskLists[m][i%3]];return {kind:task[0],title:task[1],location:locations[(i+m)%locations.length],target:task[0]==='survive'?20:1,progress:0,reward:100,paid:false}}));
+const itemNames=['silver locket','brass key','wax seal','lost field recorder','engraved mirror'];
+const finalKinds=['scan','photo','seal','collect','survive'];
+const missions=Array.from({length:5},(_,m)=>Array.from({length:150},(_,i)=>{const ring=i===0?1:1+(i%11),a=(i*137.5+m*36)*Math.PI/180;const x=Math.round(Math.cos(a)*ring*36/40)*40+5,z=Math.round(Math.sin(a)*ring*36/40)*40+5;return {kind:finalKinds[m],title:['Identify the haunting','Document the apparition','Bind the wraith','Recover the missing kit','Endure the hunt'][m],location:{name:`sector ${Math.round(x/40)}, ${Math.round(z/40)}`,x,z,floor:i%2},item:itemNames[(i+m)%5],stage:0,target:m===4?20:1,progress:0,reward:100,paid:false};}));
 const mcur=()=>missions[mode][missionIndex%150];
-const marker=new THREE.Group();
-const markerOrb=new THREE.Mesh(new THREE.IcosahedronGeometry(.16,1),new THREE.MeshStandardMaterial({color:0xdfff55,emissive:0xdfff55,emissiveIntensity:2}));marker.add(markerOrb);
-const markerLight=new THREE.PointLight(0xdfff55,1.4,3);marker.add(markerLight);scene.add(marker);
-function placeObjective(){const m=mcur(),l=m.location;marker.position.set(l.x,l.floor*3+1,l.z+1.4);marker.visible=!['photo','survive'].includes(m.kind);if(m.kind==='survive')alert=1;}
-function atObjective(){return floor===mcur().location.floor&&camera.position.distanceTo(marker.position)<2.4;}
-function hud(){const m=mcur();$('#objective').textContent=`${modeNames[mode]} · ${missionIndex+1}/150 — ${m.title}${['photo','survive'].includes(m.kind)?'':' · '+m.location.name+' ('+(m.location.floor?'upstairs':'ground floor')+')'}`;$('#prog').style.width=Math.min(100,m.progress/m.target*100)+'%';$('#coins').textContent=coins;$('#bal').textContent=coins+' ◈';$('#fear').textContent=Math.round(fear)+'%';$('#fearB').style.width=fear+'%';$('#stam').textContent=Math.round(stamina)+'%';$('#stamB').style.width=stamina+'%';$('#san').textContent=Math.round(sanity)+'%';$('#sanB').style.width=sanity+'%';$('#floor').textContent=(floor?'SECOND FLOOR':'GROUND FLOOR')+` · H: ${saved.injectors} HEALS · Q: ${saved.wards} WARDS`}
-function advance(n=1){if(!started||!controls.isLocked)return;const m=mcur();if(m.paid)return;m.progress=Math.min(m.target,m.progress+n);hud();if(m.progress>=m.target){m.paid=true;coins+=100;saved.progress[mode]=Math.min(150,missionIndex+1);save();$('#done').textContent=m.title;$('#complete').classList.remove('hidden');controls.unlock();hud();tone(660,.25);}}
+const marker=new THREE.Group();const markerOrb=new THREE.Mesh(new THREE.IcosahedronGeometry(.18,1),new THREE.MeshStandardMaterial({color:0xdfff55,emissive:0xdfff55,emissiveIntensity:1}));marker.add(markerOrb);const markerLight=new THREE.PointLight(0xdfff55,1.4,3);marker.add(markerLight);scene.add(marker);
+const note=meshBox('Hint note',[1,1.03,8],[.5,.04,.35],new THREE.MeshStandardMaterial({color:0xdfcda4,roughness:1}));
+meshBox('Sanctuary desk',[1,.8,8],[1.6,.35,.8],darkWood,{collider:true});
+const altar=meshBox('Ritual pedestal',[-2,.55,35],[1.2,1.1,1.2],darkWood,{collider:true});
+const ritualPoint=new THREE.Vector3(-2,1.1,35);
+function placeObjective(){const m=mcur(),l=m.location;note.visible=m.stage===0;marker.position.copy(m.stage===1?new THREE.Vector3(l.x,l.floor*3+.9,l.z):ritualPoint);marker.visible=m.stage>0;}
+function atObjective(){return camera.position.distanceTo(marker.position)<2.5;}
+function objectiveText(){const m=mcur();if(m.stage===0)return 'Pick up the handwritten hint from the sanctuary desk (E).';if(m.stage===1)return `Find the ${m.item}: ${m.location.floor?'upper':'ground'} floor, ${m.location.name}, X ${m.location.x} / Z ${m.location.z}.`;return `Bring the ${m.item} to the ritual pedestal. ${m.kind==='scan'?'Scan it with EMF (1 + R).':m.kind==='photo'?'Photograph the ghost near the pedestal (3 + R).':m.kind==='survive'?'Press E at the pedestal to start the 20-second hunt.':'Press E to use the item.'}`;}
+function hud(){const m=mcur();$('#objective').textContent=`${modeNames[mode]} · ${missionIndex+1}/150 — ${objectiveText()}`;$('#journal').innerHTML=`<strong>FIELD JOURNAL</strong><br>${m.stage===0?'No hint collected.':`Hint: ${m.location.floor?'Upstairs':'Ground floor'} · X ${m.location.x}, Z ${m.location.z}<br>Search for: ${m.item}`}<br>Inventory: ${m.stage===2?m.item:'empty'}<br>${inSanctuary(camera.position)?'SANCTUARY — SAFE':`Position X ${Math.round(camera.position.x)}, Z ${Math.round(camera.position.z)}`}<br>${m.stage>0?Math.round(camera.position.distanceTo(marker.position))+' m to '+(m.stage===1?'item':'ritual'):''}`;$('#prog').style.width=Math.min(100,m.progress/m.target*100)+'%';$('#coins').textContent=coins;$('#bal').textContent=coins+' ◈';$('#fear').textContent=Math.round(fear)+'%';$('#fearB').style.width=fear+'%';$('#stam').textContent=Math.round(stamina)+'%';$('#stamB').style.width=stamina+'%';$('#san').textContent=Math.round(sanity)+'%';$('#sanB').style.width=sanity+'%';$('#floor').textContent=(floor?'SECOND FLOOR':'GROUND FLOOR')+` · H: ${saved.injectors} HEALS · Q: ${saved.wards} WARDS`}
+function advance(n=1){if(!started||!controls.isLocked)return;const m=mcur();if(m.paid||m.stage!==2)return;m.progress=Math.min(m.target,m.progress+n);hud();if(m.progress>=m.target){m.paid=true;huntActive=false;coins+=100;saved.progress[mode]=Math.min(150,missionIndex+1);save();$('#done').textContent=m.title;$('#complete').classList.remove('hidden');controls.unlock();hud();tone(660,.25);}}
 $('#next').onclick=()=>{$('#complete').classList.add('hidden');if(saved.progress[mode]>=150){started=false;$('#menu').classList.remove('hidden');$('#hud').classList.add('hidden');$('#play').textContent='MODE COMPLETE — CHOOSE ANOTHER';return;}missionIndex=saved.progress[mode];placeObjective();hud();controls.lock();};
 $('#play').onclick=()=>{if(saved.progress[mode]>=150)return;audioStart();placeObjective();$('#menu').classList.add('hidden');$('#hud').classList.remove('hidden');started=true;hud();controls.lock()};
 controls.addEventListener('unlock',()=>{if(started&&$('#complete').classList.contains('hidden')&&$('#shop').classList.contains('hidden')&&$('#failed').classList.contains('hidden')){$('#menu').classList.remove('hidden');$('#hud').classList.add('hidden')}});
@@ -206,70 +237,113 @@ function tip(t=''){const el=$('#tip');if(!t)el.classList.add('hidden');else{el.t
 
 addEventListener('keydown',e=>{
   if(['Space','ArrowUp','ArrowDown'].includes(e.code))e.preventDefault();if(!started||!controls.isLocked)return;keys[e.code]=true;if(e.repeat)return;
+  if(e.code==='KeyV')thirdPerson=!thirdPerson;
   if(e.code==='KeyF')flashlight.visible=!flashlight.visible;
   if(['Digit1','Digit2','Digit3'].includes(e.code))selectTool(+e.code.slice(-1)-1);
   if(e.code==='KeyE')interact();if(e.code==='KeyH'&&saved.injectors>0&&sanity<100){saved.injectors--;sanity=Math.min(100,sanity+35);save();tone(520,.2);}if(e.code==='KeyQ'&&saved.wards>0){saved.wards--;wardUntil=gameTime+12000;save();tone(220,.4);}
-  if(e.code==='Space'){e.preventDefault();useTool()}
+  if(e.code==='Space'){e.preventDefault();jump();}if(e.code==='KeyR')useTool();
 });
-addEventListener('keyup',e=>keys[e.code]=false);
+addEventListener('keyup',e=>keys[e.code]=false);addEventListener('mousedown',e=>{if(e.button===0&&controls.isLocked)useTool();});
 function clearKeys(){for(const k of Object.keys(keys))keys[k]=false;}
 addEventListener('blur',()=>{clearKeys();if(controls.isLocked)controls.unlock();});controls.addEventListener('unlock',clearKeys);
 
 function interact(){
-  if(atObjective()&&['collect','seal'].includes(mcur().kind)){tone(440,.2);advance();return;}
-  if(Math.abs(camera.position.x)<2.2&&camera.position.z<3.2&&camera.position.z>-2.9){floor=1-floor;camera.position.y=floor?4.58:1.68;camera.position.z=floor?.5:2.4;hud();return}
+  if(!started||!controls.isLocked)return;
+  const m=mcur();if(m.stage===0&&camera.position.distanceTo(note.position)<2.5){m.stage=1;placeObjective();tone(520,.2);hud();return;}
+  if(m.stage===1&&atObjective()){m.stage=2;placeObjective();tone(720,.2);hud();return;}
+  if(m.stage===2&&atObjective()){if(m.kind==='survive'){huntActive=true;alert=1;}else if(['collect','seal'].includes(m.kind))advance();return;}
   let best=null,bd=2.4;for(const d of doors){const wp=new THREE.Vector3();d.getWorldPosition(wp);wp.y+=1.2;const dist=wp.distanceTo(camera.position);if(dist<bd){bd=dist;best=d}}
   if(best){best.userData.open=!best.userData.open;best.userData.target=best.userData.base+(best.userData.open?Math.PI*.47:0);}
 }
 const raycaster=new THREE.Raycaster();let toolReady=0,wardUntil=0,gameTime=0;
-function visibleGhost(){const target=ghost.position.clone().add(new THREE.Vector3(0,1.5,0)),v=target.sub(camera.position),d=v.length();if(d>16||Math.abs(ghost.position.y-floor*3)>.8)return false;const direction=v.normalize();if(camera.getWorldDirection(new THREE.Vector3()).angleTo(direction)>.3)return false;raycaster.set(camera.position,direction);return !raycaster.intersectObjects(staticColliders,false).some(hit=>hit.distance<d-.7);}
+function visibleGhost(){if(!ghost.visible)return false;const target=ghost.position.clone().add(new THREE.Vector3(0,1.5,0)),v=target.sub(camera.position),d=v.length();if(d>16||Math.abs(ghost.position.y-floor*3)>.8)return false;const direction=v.normalize();if(camera.getWorldDirection(new THREE.Vector3()).angleTo(direction)>.3)return false;raycaster.set(camera.position,direction);return !collisionBoxes.some(box=>{const hit=raycaster.ray.intersectBox(box,new THREE.Vector3());return hit&&hit.distanceTo(camera.position)<d-.7;});}
 function useTool(){if(!started||!controls.isLocked||mcur().paid)return;
-  if(activeTool===0){tone(180+Math.max(0,10-camera.position.distanceTo(ghost.position))*70,.09);if(mcur().kind==='scan'&&atObjective())advance();}
+  if(activeTool===0){tone(180+Math.max(0,10-camera.position.distanceTo(ghost.position))*70,.09);if(mcur().stage===2&&mcur().kind==='scan'&&atObjective())advance();}
   else if(activeTool===1&&gameTime>=toolReady&&visibleGhost()){sleepUntil=gameTime+30000;toolReady=gameTime+35000;alert=0;tone(90,.3);}
-  else if(activeTool===2&&visibleGhost()){tone(900,.08);if(mcur().kind==='photo')advance();}
+  else if(activeTool===2&&visibleGhost()){tone(900,.08);if(mcur().stage===2&&mcur().kind==='photo'&&atObjective())advance();}
 }
 function breakWood(){if(woodTriggered)return;woodTriggered=true;alert=1;$('#alert').classList.remove('hidden');fragile.forEach((b,i)=>setTimeout(()=>{b.userData.broken=true;b.userData.vy=-.7-Math.random();b.userData.vr=(Math.random()-.5)*5},i*58));tone(65,.5)}
 
 function playerBlocked(p){
-  const radius=.34,py=floor?4.0:1.0;
-  if(Math.abs(p.x)>11.7||Math.abs(p.z)>9.7)return true;
-  for(const o of staticColliders){
-    const b=new THREE.Box3().setFromObject(o);
+  const radius=.34,py=feetY+.8;
+  if(Math.abs(p.x)>WORLD_HALF-.5||Math.abs(p.z)>WORLD_HALF-.5)return true;
+  for(const b of collisionBoxes){
     if(py>b.min.y-.2&&py<b.max.y+.2&&p.x>b.min.x-radius&&p.x<b.max.x+radius&&p.z>b.min.z-radius&&p.z<b.max.z+radius)return true
   }
   return false
 }
+let feetY=0,velocityY=0,grounded=true,huntActive=false,ghostAwake=false,graceUntil=60000;
+function onStairs(p){return Math.abs(p.x)<1.75&&p.z>=-3.1&&p.z<=3.1;}
+function supportHeight(p){if(onStairs(p))return clamp((3-p.z)/2,0,3);const rotten=Math.abs(p.x)<3.5&&p.z>4.5&&p.z<7.7;if(rotten&&woodTriggered)return 0;return feetY>=2.75?3:0;}
+function jump(){if(grounded){velocityY=5.2;grounded=false;tone(70,.05,.02);}}
 function movePlayer(dt){
-  const forward=Number(!!keys.KeyW)-Number(!!keys.KeyS), strafe=Number(!!keys.KeyD)-Number(!!keys.KeyA);if(!forward&&!strafe){bob=lerp(bob,0,dt*7);camera.position.y=lerp(camera.position.y,floor?4.58:1.68,dt*8);camera.fov=lerp(camera.fov,72,dt*8);camera.updateProjectionMatrix();stamina=Math.min(100,stamina+dt*13);return}
-  const sprint=keys.ShiftLeft&&stamina>1;const base=selectedChar==='male'?4.55:4.3;const speed=sprint?base*1.55:base;
-  if(sprint)stamina=Math.max(0,stamina-dt*21);else stamina=Math.min(100,stamina+dt*13);
-  const fwd=new THREE.Vector3();camera.getWorldDirection(fwd);fwd.y=0;fwd.normalize();const right=new THREE.Vector3().crossVectors(fwd,new THREE.Vector3(0,1,0)).normalize();
-  const dir=fwd.multiplyScalar(forward).add(right.multiplyScalar(strafe));if(dir.lengthSq()>0)dir.normalize();
-  const nextX=camera.position.clone();nextX.x+=dir.x*speed*dt;if(!playerBlocked(nextX))camera.position.x=nextX.x;
-  const nextZ=camera.position.clone();nextZ.z+=dir.z*speed*dt;if(!playerBlocked(nextZ))camera.position.z=nextZ.z;
-  bob+=dt*(sprint?14:9.5);const y0=floor?4.58:1.68;camera.position.y=y0+Math.sin(bob)*.032;camera.fov=lerp(camera.fov,sprint?76:72,dt*8);camera.updateProjectionMatrix();
-  const stepGap=sprint?.28:.42;if(performance.now()-lastStep>stepGap*1000){lastStep=performance.now();tone(48+Math.random()*20,.065,.025)}
+  const forward=Number(!!keys.KeyW)-Number(!!keys.KeyS),strafe=Number(!!keys.KeyD)-Number(!!keys.KeyA),moving=!!(forward||strafe);
+  const sprint=moving&&(keys.ShiftLeft||keys.ShiftRight)&&stamina>1,speed=(selectedChar==='male'?5.2:5)*(sprint?1.7:1);
+  stamina=clamp(stamina+dt*(sprint?-17:13),0,100);
+  const fwd=camera.getWorldDirection(new THREE.Vector3());fwd.y=0;fwd.normalize();const right=new THREE.Vector3().crossVectors(fwd,new THREE.Vector3(0,1,0));const dir=fwd.multiplyScalar(forward).addScaledVector(right,strafe).normalize();
+  for(const axis of ['x','z']){const next=camera.position.clone();next[axis]+=dir[axis]*speed*dt;if(!playerBlocked(next)&&(!onStairs(next)||supportHeight(next)<=feetY+.3))camera.position[axis]=next[axis];}
+  const support=supportHeight(camera.position);
+  if(grounded&&feetY-support<.4){feetY=support;velocityY=0;}else{grounded=false;velocityY-=14*dt;feetY+=velocityY*dt;if(feetY<=support){if(velocityY< -7)sanity=Math.max(1,sanity-12);feetY=support;velocityY=0;grounded=true;}}
+  // Keep jumps below solid ceilings while allowing stairwell passage.
+  if(!onStairs(camera.position)){const ceiling=floor?6:3;if(feetY+1.78>ceiling&&feetY<ceiling){feetY=ceiling-1.78;velocityY=Math.min(0,velocityY);}}
+  floor=feetY>=2.7?1:0;bob+=moving?dt*(sprint?14:9.5):0;camera.position.y=feetY+1.68+(moving&&grounded?Math.sin(bob)*.025:0);camera.fov=lerp(camera.fov,sprint?77:72,dt*8);camera.updateProjectionMatrix();hands.position.y=moving?Math.sin(bob)*.008:0;
+  if(moving&&grounded&&performance.now()-lastStep>(sprint?280:420)){lastStep=performance.now();tone(48+Math.random()*20,.065,.025);}
 }
+const investigator=new THREE.Group();scene.add(investigator);const limbs=[];
+function bodyPart(geometry,material,x,y,z){const mesh=new THREE.Mesh(geometry,material);mesh.position.set(x,y,z);mesh.castShadow=true;investigator.add(mesh);return mesh;}
+bodyPart(new THREE.CapsuleGeometry(.22,.38,6,12),cloth,0,1.24,0);
+bodyPart(new THREE.BoxGeometry(.40,.39,.25),new THREE.MeshStandardMaterial({color:0x283021,roughness:1}),0,1.29,.025);
+bodyPart(new THREE.BoxGeometry(.34,.44,.22),cloth,0,1.31,-.23);
+const face=bodyPart(new THREE.SphereGeometry(.16,16,12),skin,0,1.78,0);face.scale.set(.85,1.25,.86);
+const hairCap=bodyPart(new THREE.SphereGeometry(.165,16,10),hairMat,0,1.89,-.015);hairCap.scale.y=.6;
+const ponytail=bodyPart(new THREE.CapsuleGeometry(.052,.34,4,8),hairMat,0,1.65,-.16);ponytail.visible=false;
+for(const sign of [-1,1]){
+  const leg=bodyPart(new THREE.CapsuleGeometry(.09,.62,5,10),cloth,sign*.12,.52,0);limbs.push(leg);
+  bodyPart(new THREE.BoxGeometry(.17,.14,.28),metalMat,sign*.12,.09,.065);
+  const arm=bodyPart(new THREE.CapsuleGeometry(.065,.50,5,10),cloth,sign*.30,1.14,0);limbs.push(arm);
+  bodyPart(new THREE.SphereGeometry(.06,10,8),skin,sign*.30,.85,.015);
+}
+let thirdPerson=false;const loadedCharacters={};
+const followCamera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.04,130);
+function updateInvestigator(){
+  investigator.position.set(camera.position.x,feetY,camera.position.z);const look=camera.getWorldDirection(new THREE.Vector3());investigator.rotation.y=Math.atan2(look.x,look.z);ponytail.visible=selectedChar==='female';
+  investigator.visible=started&&thirdPerson&&!loadedCharacters[selectedChar];hands.visible=!thirdPerson;
+  for(const [key,obj] of Object.entries(loadedCharacters)){obj.visible=started&&thirdPerson&&key===selectedChar;obj.position.copy(investigator.position);obj.rotation.y=investigator.rotation.y;}
+  limbs.forEach((limb,i)=>limb.rotation.x=(keys.KeyW||keys.KeyS||keys.KeyA||keys.KeyD)?Math.sin(bob+(i%2)*Math.PI)*.2:0);
+  scenePass.camera=thirdPerson?followCamera:camera;
+  if(thirdPerson){const target=camera.position.clone();const behind=new THREE.Vector3(-look.x,.05,-look.z).normalize(),ray=new THREE.Ray(target,behind);let distance=3.4;for(const box of collisionBoxes){const hit=ray.intersectBox(box,new THREE.Vector3());if(hit)distance=Math.min(distance,Math.max(.25,target.distanceTo(hit)-.2));}followCamera.position.copy(target).addScaledVector(behind,distance);followCamera.lookAt(target.clone().add(new THREE.Vector3(0,-.25,0)));}
+}
+// Manifest remains disabled until Blender successfully exports every model.
+async function loadBlenderModels(){
+  try{const response=await fetch('models/manifest.json');if(!response.ok)return;const manifest=await response.json();if(!manifest.enabled)return;const loader=new GLTFLoader();
+    const asset=await loader.loadAsync('models/'+manifest.ghost);const model=asset.scene;ghost.add(model);for(const child of ghost.children)if(child!==model&&!child.isLight)child.visible=false;
+    for(const key of ['male','female']){const gltf=await loader.loadAsync('models/'+manifest[key]);gltf.scene.visible=false;scene.add(gltf.scene);loadedCharacters[key]=gltf.scene;}
+  }catch(error){console.warn('Blender assets unavailable; using procedural characters.',error.message);}
+}
+if(typeof fetch==='function')loadBlenderModels();
+
+function inSanctuary(p){return Math.hypot(p.x,p.z-8.8)<SAFE_RADIUS;}
 function updateGhost(dt,now){
-  if(now<sleepUntil||now<wardUntil){torso.material.opacity=.08;ghost.rotation.z=lerp(ghost.rotation.z,1.15,dt*2);return}
-  torso.material.opacity=.26;ghost.rotation.z=lerp(ghost.rotation.z,0,dt*3);
-  const sameFloor=Math.abs(ghost.position.y-(floor?3.1:.1))<1.2,d=ghost.position.distanceTo(camera.position);
-  if((sameFloor&&d<8.5)||alert>.05){alert=Math.min(1,alert+dt*.3);$('#alert').classList.remove('hidden');const target=camera.position.clone();target.y=floor?3.1:.1;const v=target.sub(ghost.position);v.y=0;if(v.length()>1.3)ghost.position.addScaledVector(v.normalize(),dt*([1.65,2.15,1.8,1.9,2.7][mode]));ghost.position.y=floor?3.1:.1}
-  else{$('#alert').classList.add('hidden');ghost.position.x=8+Math.sin(now*.00029)*3.1;ghost.position.z=-5.6+Math.cos(now*.00023)*2.2}
-  ghost.rotation.y=Math.atan2(camera.position.x-ghost.position.x,camera.position.z-ghost.position.z);
-  ghost.children.forEach((c,i)=>{if(c.isMesh&&i>2)c.position.y=.45+Math.sin(now*.003+i)*.15});
-  const dd=ghost.position.distanceTo(camera.position);fear=lerp(fear,sameFloor&&dd<9?clamp((9-dd)/8*100,0,100):0,dt*1.5);
-  const drain=selectedChar==='female'?.68:1;if(sameFloor&&dd<3.2)sanity=Math.max(0,sanity-dt*(mode===4?18:10)*drain);
+  // Sanctuary is protected on both floors, including after the grace period.
+  if(!started||now<graceUntil||inSanctuary(camera.position)){ghost.visible=false;ghostAwake=false;alert=0;fear=lerp(fear,0,dt*3);$('#alert').classList.add('hidden');return;}
+  if(!ghostAwake){const away=camera.position.clone().sub(new THREE.Vector3(0,camera.position.y,8.8)).normalize();ghost.position.copy(camera.position).addScaledVector(away,20);ghost.position.y=floor*3+.08;ghostAwake=true;}
+  ghost.visible=true;
+  if(now<sleepUntil||now<wardUntil){ghostMat.opacity=.2;return;}ghostMat.opacity=.58;
+  const target=camera.position.clone();target.y=floor*3+.08;const v=target.sub(ghost.position),d=v.length();
+  if(d>1.2)ghost.position.addScaledVector(v.normalize(),dt*([1.5,2.2,1.8,2,2.8][mode])); // Intentionally ignores wall colliders.
+  if(inSanctuary(ghost.position)){ghost.visible=false;ghostAwake=false;return;}
+  ghost.rotation.y=Math.atan2(camera.position.x-ghost.position.x,camera.position.z-ghost.position.z);ghost.rotation.z=Math.sin(now*.001)*.025;
+  $('#alert').classList.toggle('hidden',d>14);fear=lerp(fear,clamp((14-d)/12*100,0,100),dt*2);
+  if(d<2.3)sanity=Math.max(0,sanity-dt*(mode===4?18:10)*(selectedChar==='female'?.68:1));
   if(sanity<=0){$('#failed').classList.remove('hidden');controls.unlock();tone(45,.8);}
 }
 function nearbyTips(){
-  if(atObjective()&&marker.visible){tip(mcur().kind==='scan'?'1 + SPACE · SCAN ANOMALY':'E · '+(mcur().kind==='seal'?'RESTORE SEAL':'RECOVER OBJECT'));return;}
-  if(Math.abs(camera.position.x)<2.2&&camera.position.z<3.2&&camera.position.z>-2.9){tip('E · USE STAIRS');return}
-  for(const d of doors){const wp=new THREE.Vector3();d.getWorldPosition(wp);wp.y+=1.2;if(wp.distanceTo(camera.position)<2.4){tip('E · OPEN / CLOSE DOOR');return}}
-  tip('')
+  if(mcur().stage===0&&camera.position.distanceTo(note.position)<2.5){tip('E · PICK UP HINT');return;}
+  if(atObjective()&&marker.visible){tip(mcur().stage===1?'E · PICK UP '+mcur().item.toUpperCase():mcur().kind==='scan'?'1 + R · USE ITEM WITH EMF':mcur().kind==='photo'?'3 + R · PHOTOGRAPH GHOST':'E · USE COLLECTED ITEM');return;}
+  if(onStairs(camera.position)){tip('WALK UP / DOWN · SPACE TO JUMP');return;}
+  tip('');
 }
-$('#retry').onclick=()=>{sanity=100;fear=0;stamina=100;floor=0;fallY=null;alert=0;sleepUntil=0;wardUntil=0;camera.position.set(0,1.68,8.8);ghost.position.set(8,.12,-6);mcur().progress=0;$('#failed').classList.add('hidden');placeObjective();controls.lock();};
-let fallY=null,fallSpeed=0;
+$('#retry').onclick=()=>{sanity=100;fear=0;stamina=100;floor=0;feetY=0;velocityY=0;grounded=true;alert=0;sleepUntil=0;wardUntil=0;huntActive=false;ghostAwake=false;ghost.visible=false;graceUntil=gameTime+60000;camera.position.copy(SPAWN);mcur().progress=0;$('#failed').classList.add('hidden');placeObjective();streamWorld(true);controls.lock();};
 let last=performance.now();
 function loop(now){
   requestAnimationFrame(loop);const dt=Math.min(.035,(now-last)/1000);last=now;
@@ -277,16 +351,15 @@ function loop(now){
   practicals.forEach((l,i)=>l.intensity=l.userData.base*(.78+.22*Math.sin(now*.003+i*2.1))*(Math.random()>.985?.18:1));
   for(const d of doors)d.rotation.y=lerp(d.rotation.y,d.userData.target,dt*5.5);
   if(started&&controls.isLocked){
-    gameTime+=dt*1000;movePlayer(dt);if(mcur().kind==='survive')advance(dt);if(!keys.ShiftLeft)stamina=Math.min(100,stamina+dt*10);
-    if(floor&&camera.position.z>4.5&&camera.position.z<7.7&&Math.abs(camera.position.x)<3.5){breakWood();if(fallY===null){fallY=camera.position.y;fallSpeed=0;}}
-    if(fallY!==null){fallSpeed+=9.8*dt;fallY-=fallSpeed*dt;camera.position.y=fallY;if(fallY<=1.68){floor=0;camera.position.y=1.68;fallY=null;sanity=Math.max(1,sanity-12);tone(50,.25);}}
+    gameTime+=dt*1000;movePlayer(dt);streamWorld();if(mcur().kind==='survive'&&huntActive&&ghost.visible&&!inSanctuary(camera.position))advance(dt);
+    if(floor&&camera.position.z>4.5&&camera.position.z<7.7&&Math.abs(camera.position.x)<3.5&&grounded)breakWood();
     for(const b of fragile)if(b.userData.broken&&b.position.y>.12){b.userData.vy-=9.8*dt;b.position.y+=b.userData.vy*dt;b.rotation.x+=b.userData.vr*dt;b.rotation.z+=b.userData.vr*.55*dt}
     updateGhost(dt,gameTime);nearbyTips();hud();
   }
-  composer.render()
+  updateInvestigator();composer.render()
 }
 requestAnimationFrame(loop);
-addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);composer.setSize(innerWidth,innerHeight)});
-hud();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();followCamera.aspect=camera.aspect;followCamera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);composer.setSize(innerWidth,innerHeight)});
+streamWorld(true);placeObjective();hud();
 </script>
 </body></html>
