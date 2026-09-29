@@ -2,42 +2,254 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Wraith House — 3D Ghost Hunt</title><meta name="theme-color" content="#030405"/>
+<title>Wraith House — Real-time 3D Ghost Hunt</title>
+<meta name="theme-color" content="#050607"/>
 <style>
-:root{--a:#d8ff57;--ink:#eef2ef;--muted:#89918e;--danger:#ff405f}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#020304;color:var(--ink);font-family:Inter,system-ui,sans-serif}button{font:inherit;color:inherit;cursor:pointer}canvas{position:fixed;inset:0;width:100%;height:100%;display:block}.hidden{display:none!important}#v{position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle,transparent 43%,rgba(0,0,0,.76));z-index:3}.panel{position:fixed;z-index:10;left:5vw;top:50%;transform:translateY(-50%);width:min(610px,90vw);padding:30px;background:linear-gradient(135deg,rgba(5,7,8,.97),rgba(5,7,8,.72));border:1px solid #ffffff1d;box-shadow:0 30px 100px #0009;backdrop-filter:blur(18px)}.ey{font-size:10px;letter-spacing:.25em;color:var(--a);font-weight:800}h1{font-size:clamp(52px,7vw,88px);line-height:.8;letter-spacing:-.06em;margin:12px 0 18px}h1 span{font-weight:300;color:#9ba3a0}.lead{color:#aab0ad;line-height:1.55}.label{font-size:10px;letter-spacing:.17em;color:#b1b7b4;margin:18px 0 9px}.chars,.modes{display:grid;gap:8px}.chars{grid-template-columns:1fr 1fr}.modes{grid-template-columns:repeat(5,1fr)}.card,.mode{border:1px solid #ffffff1f;background:#0b0e0f;padding:12px;text-align:left}.card.selected,.mode.selected{border-color:var(--a);box-shadow:inset 0 0 0 1px var(--a)}.portrait{height:70px;border-radius:3px;margin-bottom:8px;background:radial-gradient(circle at 50% 30%,#767d78 0 9%,#323735 10% 18%,#101313 19% 100%);position:relative;overflow:hidden}.portrait:after{content:"";position:absolute;left:35%;top:18%;width:30%;height:68%;border-radius:45% 45% 38% 38%;background:linear-gradient(#d7c3b2 0 35%,#252827 36% 100%);box-shadow:0 0 28px #000}.female .portrait:after{background:linear-gradient(#d3b3a6 0 35%,#3b3130 36% 100%)}.card b{display:block;font-size:12px;letter-spacing:.1em}.card small{color:var(--muted)}.mode{font-size:9px;letter-spacing:.08em;text-align:center;padding:10px 4px}.mode.selected{background:var(--a);color:#0b0d08;font-weight:900}.actions{display:flex;gap:10px;margin-top:18px}.primary,.secondary{border:0;padding:14px 18px;font-size:11px;font-weight:900;letter-spacing:.08em}.primary{background:var(--a);color:#0a0c08}.secondary{background:#15191a;border:1px solid #ffffff1f}.micro{font-size:9px;color:#717875;margin-top:13px}#hud{position:fixed;z-index:7;inset:0;pointer-events:none}.objective{position:absolute;top:25px;left:25px;width:min(450px,60vw);padding:13px 15px;border-left:2px solid var(--a);background:linear-gradient(90deg,#050708d9,#05070822)}.objective small{font-size:8px;letter-spacing:.2em;color:var(--a)}.objective b{display:block;margin:5px 0}.progress{height:2px;background:#ffffff1c}.progress i{display:block;height:100%;background:var(--a);width:0}.coins{position:absolute;right:25px;top:25px;padding:10px 13px;border:1px solid #ffffff1f;background:#050708bb}.coins span{color:var(--a)}.stats{position:absolute;left:25px;bottom:28px;width:280px}.stat{display:grid;grid-template-columns:60px 1fr 40px;gap:8px;align-items:center;font-size:9px;margin-top:7px}.bar{height:3px;background:#ffffff1f}.bar i{display:block;height:100%;background:#d6ddda}.inv{position:absolute;left:50%;bottom:25px;transform:translateX(-50%);display:flex;gap:7px;pointer-events:auto}.slot{width:115px;padding:10px 8px;background:#050708cc;border:1px solid #ffffff1f;font-size:9px}.slot.active{border-color:var(--a)}.cross{position:absolute;left:50%;top:50%;width:14px;height:14px;transform:translate(-50%,-50%)}.cross:before,.cross:after{content:"";position:absolute;background:#fff}.cross:before{width:14px;height:1px;top:6px}.cross:after{height:14px;width:1px;left:6px}.alert{position:absolute;top:20%;left:50%;transform:translateX(-50%);color:var(--danger);letter-spacing:.25em;font-size:11px;text-shadow:0 0 15px var(--danger)}.floor{position:absolute;right:25px;bottom:25px;font-size:9px;letter-spacing:.18em;color:#9aa19f}.modal{position:fixed;z-index:20;inset:0;background:#000b;display:grid;place-items:center;backdrop-filter:blur(10px)}.box{width:min(900px,92vw);max-height:86vh;overflow:auto;padding:28px;background:#090c0d;border:1px solid #ffffff20}.shop{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:7px}.tool{padding:12px;border:1px solid #ffffff1b;background:#0e1112}.tool b{font-size:11px}.tool p{font-size:9px;color:var(--muted);min-height:26px}.tool em{color:var(--a);font-style:normal;font-size:10px}.close{float:right;background:#15191a;border:1px solid #ffffff20;padding:8px 12px}@media(max-width:700px){.panel{left:3vw;width:94vw;padding:20px}.modes{grid-template-columns:repeat(3,1fr)}.inv .slot{width:82px}.stats{width:210px}}
+:root{--acid:#dfff55;--ink:#f1f4f2;--muted:#8d9691;--danger:#ff3658;--glass:rgba(8,11,12,.78)}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#020304;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}
+button{font:inherit;color:inherit;cursor:pointer}canvas{position:fixed;inset:0;width:100%;height:100%;display:block}.hidden{display:none!important}
+#vignette{position:fixed;inset:0;z-index:4;pointer-events:none;background:radial-gradient(circle at center,transparent 38%,rgba(0,0,0,.35) 62%,rgba(0,0,0,.92) 100%);mix-blend-mode:multiply}
+#grain{position:fixed;inset:-60px;z-index:5;pointer-events:none;opacity:.045;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.84' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.9'/%3E%3C/svg%3E");animation:grain .18s steps(2) infinite}@keyframes grain{0%{transform:translate(0,0)}25%{transform:translate(-2%,1%)}50%{transform:translate(1%,-2%)}75%{transform:translate(2%,2%)}100%{transform:translate(-1%,-1%)}}
+.panel{position:fixed;z-index:20;left:4vw;top:50%;transform:translateY(-50%);width:min(660px,92vw);padding:30px;background:linear-gradient(135deg,rgba(5,7,8,.97),rgba(5,7,8,.68));border:1px solid #ffffff20;box-shadow:0 35px 120px #000;backdrop-filter:blur(20px)}
+.ey{font-size:10px;letter-spacing:.27em;color:var(--acid);font-weight:900}h1{font-size:clamp(54px,7vw,94px);line-height:.8;letter-spacing:-.065em;margin:12px 0 20px}h1 span{font-weight:250;color:#8e9792}.lead{color:#aab2ae;line-height:1.55;max-width:560px}.label{font-size:10px;letter-spacing:.18em;color:#b2bab6;margin:18px 0 9px}.chars,.modes{display:grid;gap:8px}.chars{grid-template-columns:1fr 1fr}.modes{grid-template-columns:repeat(5,1fr)}
+.card,.mode{border:1px solid #ffffff1c;background:#0b0e0f;padding:12px;text-align:left;transition:.2s}.card:hover,.mode:hover{transform:translateY(-1px);border-color:#ffffff4a}.card.selected,.mode.selected{border-color:var(--acid);box-shadow:inset 0 0 0 1px var(--acid),0 0 24px #dfff5510}
+.portrait{height:78px;border-radius:3px;margin-bottom:9px;position:relative;overflow:hidden;background:radial-gradient(circle at 50% 30%,#747a75 0 9%,#303431 10% 18%,#101313 19% 100%)}
+.portrait:after{content:"";position:absolute;left:34%;top:15%;width:32%;height:73%;border-radius:45% 45% 34% 34%;background:linear-gradient(#cdb29f 0 34%,#222625 35% 100%);box-shadow:0 0 32px #000}.female .portrait:after{background:linear-gradient(#c9a79e 0 34%,#3a2f2f 35% 100%)}
+.card b{display:block;font-size:12px;letter-spacing:.12em}.card small{color:var(--muted)}.mode{font-size:9px;letter-spacing:.09em;text-align:center;padding:11px 4px}.mode.selected{background:var(--acid);color:#090b08;font-weight:950}
+.actions{display:flex;gap:10px;margin-top:18px}.primary,.secondary{border:0;padding:14px 18px;font-size:11px;font-weight:950;letter-spacing:.09em}.primary{background:var(--acid);color:#090b08}.secondary{background:#15191a;border:1px solid #ffffff20}.micro{font-size:9px;color:#737b77;margin-top:13px;line-height:1.6}
+#hud{position:fixed;z-index:10;inset:0;pointer-events:none}.objective{position:absolute;top:26px;left:26px;width:min(460px,65vw);padding:14px 16px;border-left:2px solid var(--acid);background:linear-gradient(90deg,#050708dd,#05070815)}.objective small{font-size:8px;letter-spacing:.2em;color:var(--acid)}.objective b{display:block;margin:6px 0 9px;font-size:13px}.progress{height:2px;background:#ffffff1a}.progress i{display:block;height:100%;background:var(--acid);width:0}
+.coins{position:absolute;right:26px;top:26px;padding:10px 14px;border:1px solid #ffffff20;background:#050708bd}.coins span{color:var(--acid)}
+.stats{position:absolute;left:26px;bottom:28px;width:300px}.stat{display:grid;grid-template-columns:62px 1fr 42px;gap:9px;align-items:center;font-size:9px;margin-top:7px}.bar{height:3px;background:#ffffff1f}.bar i{display:block;height:100%;background:#d8dfdb}.inv{position:absolute;left:50%;bottom:25px;transform:translateX(-50%);display:flex;gap:7px;pointer-events:auto}.slot{width:120px;padding:10px 8px;background:#050708d8;border:1px solid #ffffff20;font-size:9px}.slot.active{border-color:var(--acid);box-shadow:0 0 18px #dfff5514}
+.cross{position:absolute;left:50%;top:50%;width:16px;height:16px;transform:translate(-50%,-50%);opacity:.85}.cross:before,.cross:after{content:"";position:absolute;background:#fff}.cross:before{width:16px;height:1px;top:7px}.cross:after{height:16px;width:1px;left:7px}
+.alert{position:absolute;top:19%;left:50%;transform:translateX(-50%);color:var(--danger);letter-spacing:.28em;font-size:11px;text-shadow:0 0 18px var(--danger);animation:pulse .75s infinite alternate}@keyframes pulse{to{opacity:.45}}
+.floor{position:absolute;right:26px;bottom:26px;font-size:9px;letter-spacing:.18em;color:#9ba39f}.tip{position:absolute;left:50%;top:61%;transform:translateX(-50%);padding:8px 12px;background:#050708cc;border:1px solid #ffffff1c;font-size:9px;letter-spacing:.1em;color:#d7ddd9}
+.modal{position:fixed;z-index:30;inset:0;background:#000c;display:grid;place-items:center;backdrop-filter:blur(10px)}.box{width:min(940px,92vw);max-height:86vh;overflow:auto;padding:28px;background:#090c0d;border:1px solid #ffffff20}.shop{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:7px}.tool{padding:12px;border:1px solid #ffffff1b;background:#0e1112;text-align:left}.tool:hover{border-color:#ffffff45}.tool b{font-size:11px}.tool p{font-size:9px;color:var(--muted);min-height:28px}.tool em{color:var(--acid);font-style:normal;font-size:10px}.close{float:right;background:#15191a;border:1px solid #ffffff20;padding:8px 12px}
+@media(max-width:700px){.panel{left:3vw;width:94vw;padding:20px}.modes{grid-template-columns:repeat(3,1fr)}.inv .slot{width:86px}.stats{width:215px}.objective{left:15px;top:15px}.coins{right:15px;top:15px}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
-</head><body>
-<canvas id="game"></canvas><div id="v"></div>
-<section id="menu" class="panel"><div class="ey">ONLINE PARANORMAL EXTRACTION</div><h1>WRAITH<br><span>HOUSE</span></h1><p class="lead">Explore a two-floor haunted building, complete contracts, earn coins, unlock equipment and survive an adaptive entity.</p><div class="label">CHOOSE INVESTIGATOR</div><div class="chars"><button class="card selected" data-char="male"><div class="portrait"></div><b>ETHAN</b><small>Field Technician</small></button><button class="card female" data-char="female"><div class="portrait"></div><b>MAYA</b><small>Occult Specialist</small></button></div><div class="label">GAME MODE</div><div id="modes" class="modes"></div><div class="actions"><button id="play" class="primary">ENTER THE HOUSE</button><button id="shopBtn" class="secondary">EQUIPMENT STORE</button></div><div class="micro">WASD move · Mouse look · Shift sprint · F flashlight · E interact · 1/2/3 tools · Space use tool</div></section>
-<aside id="hud" class="hidden"><div class="objective"><small>CURRENT OBJECTIVE</small><b id="objective"></b><div class="progress"><i id="prog"></i></div></div><div class="coins">◈ <span id="coins">0</span></div><div class="stats"><div class="stat"><span>FEAR</span><div class="bar"><i id="fearB"></i></div><b id="fear">0%</b></div><div class="stat"><span>STAMINA</span><div class="bar"><i id="stamB"></i></div><b id="stam">100%</b></div><div class="stat"><span>SANITY</span><div class="bar"><i id="sanB"></i></div><b id="san">100%</b></div></div><div class="inv"><button class="slot active">1 · EMF</button><button class="slot">2 · SLEEP DART</button><button class="slot">3 · CAMERA</button></div><div id="alert" class="alert hidden">ENTITY ALERTED</div><div id="floor" class="floor">GROUND FLOOR</div><div class="cross"></div></aside>
+</head>
+<body>
+<canvas id="game"></canvas><div id="vignette"></div><div id="grain"></div>
+
+<section id="menu" class="panel">
+  <div class="ey">ONLINE PARANORMAL EXTRACTION</div>
+  <h1>WRAITH<br><span>HOUSE</span></h1>
+  <p class="lead">Search a two-floor haunted residence, complete evidence contracts, earn coins, unlock specialist equipment and survive an entity that reacts to noise and proximity.</p>
+  <div class="label">CHOOSE INVESTIGATOR</div>
+  <div class="chars">
+    <button class="card selected" data-char="male"><div class="portrait"></div><b>ETHAN</b><small>Field Technician · faster sprint</small></button>
+    <button class="card female" data-char="female"><div class="portrait"></div><b>MAYA</b><small>Occult Specialist · slower sanity drain</small></button>
+  </div>
+  <div class="label">GAME MODE</div><div id="modes" class="modes"></div>
+  <div class="actions"><button id="play" class="primary">ENTER THE HOUSE</button><button id="shopBtn" class="secondary">EQUIPMENT STORE</button></div>
+  <div class="micro">WASD move · Mouse look · Shift sprint · F flashlight · E interact / stairs · 1/2/3 tools · Space use tool · Esc pause</div>
+</section>
+
+<aside id="hud" class="hidden">
+  <div class="objective"><small>CURRENT OBJECTIVE</small><b id="objective"></b><div class="progress"><i id="prog"></i></div></div>
+  <div class="coins">◈ <span id="coins">0</span></div>
+  <div class="stats">
+    <div class="stat"><span>FEAR</span><div class="bar"><i id="fearB"></i></div><b id="fear">0%</b></div>
+    <div class="stat"><span>STAMINA</span><div class="bar"><i id="stamB"></i></div><b id="stam">100%</b></div>
+    <div class="stat"><span>SANITY</span><div class="bar"><i id="sanB"></i></div><b id="san">100%</b></div>
+  </div>
+  <div class="inv"><button class="slot active">1 · EMF</button><button class="slot">2 · SLEEP DART</button><button class="slot">3 · CAMERA</button></div>
+  <div id="alert" class="alert hidden">ENTITY ALERTED</div><div id="tip" class="tip hidden"></div><div id="floor" class="floor">GROUND FLOOR</div><div class="cross"></div>
+</aside>
+
 <section id="shop" class="modal hidden"><div class="box"><button id="close" class="close">✕</button><div class="ey">FIELD ARMORY</div><h2>Equipment Store</h2><p>Balance: <b id="bal">0 ◈</b></p><div id="toolGrid" class="shop"></div></div></section>
-<section id="complete" class="modal hidden"><div class="box" style="max-width:420px;text-align:center"><div class="ey">CONTRACT STEP COMPLETE</div><h2 id="done"></h2><p>Reward deposited.</p><h1 style="font-size:48px;color:var(--a);line-height:1">+100 ◈</h1><button id="next" class="primary">CONTINUE</button></div></section>
+<section id="complete" class="modal hidden"><div class="box" style="max-width:430px;text-align:center"><div class="ey">CONTRACT STEP COMPLETE</div><h2 id="done"></h2><p>Reward deposited.</p><h1 style="font-size:50px;color:var(--acid);line-height:1">+100 ◈</h1><button id="next" class="primary">CONTINUE</button></div></section>
+
 <script type="module">
-import * as THREE from 'three';import{PointerLockControls}from'three/addons/controls/PointerLockControls.js';import{EffectComposer}from'three/addons/postprocessing/EffectComposer.js';import{RenderPass}from'three/addons/postprocessing/RenderPass.js';import{UnrealBloomPass}from'three/addons/postprocessing/UnrealBloomPass.js';
-const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-const renderer=new THREE.WebGLRenderer({canvas:$('#game'),antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.72;
-const scene=new THREE.Scene();scene.background=new THREE.Color(0x020304);scene.fog=new THREE.FogExp2(0x050708,.028);const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.05,120);camera.position.set(0,1.7,11);const controls=new PointerLockControls(camera,renderer.domElement);scene.add(controls.object);
-const composer=new EffectComposer(renderer);composer.addPass(new RenderPass(scene,camera));composer.addPass(new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),.35,.6,.83));
-const hemi=new THREE.HemisphereLight(0x66727a,0x050505,.25);scene.add(hemi);const moon=new THREE.DirectionalLight(0xa9c7d8,1.2);moon.position.set(-10,15,8);moon.castShadow=true;scene.add(moon);const flash=new THREE.SpotLight(0xeaf6ff,28,22,.38,.55,1.7);camera.add(flash);flash.target.position.set(0,0,-8);camera.add(flash.target);
-const mat=(c,r=.85,m=0)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m});const wall=mat(0x2a2d2b,.95),wood=mat(0x4c3829,.95),floorMat=mat(0x24231f,1),metal=mat(0x363b3d,.65,.25);const colliders=[],fragile=[];
-function box(name,p,s,ma=wall,collide=true){const o=new THREE.Mesh(new THREE.BoxGeometry(...s),ma);o.name=name;o.position.set(...p);o.castShadow=o.receiveShadow=true;scene.add(o);if(collide)colliders.push(o);return o}
-box('ground',[0,-.2,0],[26,.4,22],floorMat);box('upper',[0,3.0,0],[26,.25,22],floorMat);for(const y of [1.4,4.4]){box('wall',[-12.8,y,0],[.35,3,22]);box('wall',[12.8,y,0],[.35,3,22]);box('wall',[0,y,-10.8],[26,3,.35]);box('wall',[0,y,10.8],[26,3,.35])}for(const x of [-5,4]){box('inner',[x,1.4,-3],[.25,3,12]);box('inner2',[x,4.4,3],[.25,3,12])}box('stairs',[0,1.45,0],[3,2.9,5],wood,false);for(let i=0;i<11;i++){const s=box('step',[0,.12+i*.25,2-i*.42],[3,.22,.52],wood,false);s.rotation.x=-.03}
-for(let i=0;i<12;i++){const b=box('rotten',[-2.6+i*.48,3.14,5.8],[.42,.12,3.0],wood,false);b.userData={broken:false,vy:0,vr:(Math.random()-.5)*4};fragile.push(b)}
-for(const [x,z] of [[-8,-6],[8,-6],[-8,6],[8,6]]){box('table',[x,.55,z],[2.2,.15,1.1],wood,false);for(const dx of [-.9,.9])for(const dz of [-.4,.4])box('leg',[x+dx,.25,z+dz],[.1,.8,.1],wood,false)}
-const ghost=new THREE.Group();const body=new THREE.Mesh(new THREE.CapsuleGeometry(.62,1.35,8,16),new THREE.MeshPhysicalMaterial({color:0xb8d4d8,transparent:true,opacity:.32,roughness:.2,transmission:.35,emissive:0x3e7b88,emissiveIntensity:1.4}));body.position.y=1.2;ghost.add(body);const head=new THREE.Mesh(new THREE.SphereGeometry(.48,20,14),body.material);head.position.y=2.15;ghost.add(head);for(const x of [-.16,.16]){const eye=new THREE.Mesh(new THREE.SphereGeometry(.035,8,8),new THREE.MeshBasicMaterial({color:0xff334f}));eye.position.set(x,2.18,-.44);ghost.add(eye)}const glow=new THREE.PointLight(0x6db3c7,3,8);glow.position.y=1.7;ghost.add(glow);ghost.position.set(8,.2,-6);scene.add(ghost);
-let coins=Number(localStorage.getItem('wraithCoins')||0),mode=0,missionIndex=0,activeTool=0,started=false,floor=0,fear=0,sanity=100,stamina=100,alert=0,sleepUntil=0,woodTriggered=false;const keys={};
-const modeNames=['INVESTIGATION','NIGHTMARE','EXORCISM','RESCUE','HARDCORE'];$('#modes').innerHTML=modeNames.map((x,i)=>'<button class="mode '+(i===0?'selected':'')+'" data-i="'+i+'">'+x+'</button>').join('');$$('.mode').forEach(b=>b.onclick=()=>{mode=+b.dataset.i;$$('.mode').forEach(x=>x.classList.toggle('selected',x===b))});$$('.card').forEach(b=>b.onclick=()=>{$$('.card').forEach(x=>x.classList.toggle('selected',x===b))});
-const actions=['Scan an EMF hotspot','Photograph the apparition','Collect spectral residue','Recover a cursed object','Check the upstairs cold spot','Record an EVP response','Inspect the broken corridor','Restore a disturbed seal','Survive a manifestation','Tag paranormal activity'],rooms=['foyer','study','dining room','east bedroom','west bedroom','upper corridor','storage room','ritual room'];const missions=Array.from({length:5},(_,m)=>Array.from({length:120},(_,i)=>({title:actions[(i+m)%actions.length]+' in the '+rooms[(i*3+m)%rooms.length],target:1+(i%3),progress:0,reward:100})));
-function ms(){return missions[mode][missionIndex%120]}function hud(){const m=ms();$('#objective').textContent=m.title;$('#prog').style.width=Math.min(100,m.progress/m.target*100)+'%';$('#coins').textContent=coins;$('#bal').textContent=coins+' ◈';$('#fear').textContent=Math.round(fear)+'%';$('#fearB').style.width=fear+'%';$('#stam').textContent=Math.round(stamina)+'%';$('#stamB').style.width=stamina+'%';$('#san').textContent=Math.round(sanity)+'%';$('#sanB').style.width=sanity+'%';$('#floor').textContent=floor?'SECOND FLOOR':'GROUND FLOOR'}
-function advance(n=1){const m=ms();m.progress+=n;hud();if(m.progress>=m.target){controls.unlock();coins+=100;localStorage.setItem('wraithCoins',coins);$('#done').textContent=m.title;$('#complete').classList.remove('hidden');hud()}}
-$('#next').onclick=()=>{$('#complete').classList.add('hidden');missionIndex++;hud();controls.lock()};$('#play').onclick=()=>{$('#menu').classList.add('hidden');$('#hud').classList.remove('hidden');started=true;hud();controls.lock()};controls.addEventListener('unlock',()=>{if(started&&$('#complete').classList.contains('hidden')&&$('#shop').classList.contains('hidden')){$('#menu').classList.remove('hidden');$('#hud').classList.add('hidden')}});controls.addEventListener('lock',()=>{$('#menu').classList.add('hidden');$('#hud').classList.remove('hidden')});
-const toolNames=['EMF Meter','Sleep Dart','Spirit Camera','UV Torch','Salt Barrier','Trip Sensor','Thermal Scanner','EVP Recorder','Motion Grid','Holy Water','Spirit Bell','Iron Chain','Ward Chalk','Laser Grid','Night Vision','Audio Lure','Smoke Bomb','Decoy Doll','Seal Kit','Cursed Compass','Cold Sensor','Spectral Lens','Pulse Beacon','Door Jammer','Mirror Trap','Rune Flash','Ghost Bait','Static Probe','Incense Pack','Phase Alarm','Camera Drone','Blessed Candle','Noise Maker','Infrared Trap','EMF Beacon','Spirit Box','Thermal Mine','Spectral Net','Holy Seal','Sanity Injector','Flash Charge','Shadow Lamp','Entity Tagger','Aura Scope','Ritual Knife','Silver Bell','Ward Projector','Ghost Prank Box','Cryo Capsule','Phase Anchor','Void Lantern','Exorcism Kit'];$('#toolGrid').innerHTML=toolNames.map((n,i)=>'<button class="tool"><b>'+n+'</b><p>'+(['Detect paranormal energy.','Temporarily disables the entity.','Captures evidence.','Specialist field equipment.'][i%4])+'</p><em>'+((i+1)*80)+' ◈</em></button>').join('');$('#shopBtn').onclick=()=>{$('#shop').classList.remove('hidden');hud()};$('#close').onclick=()=>$('#shop').classList.add('hidden');
-$$('.slot').forEach((b,i)=>b.onclick=()=>{activeTool=i;$$('.slot').forEach((x,j)=>x.classList.toggle('active',i===j))});addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='KeyF')flash.visible=!flash.visible;if(['Digit1','Digit2','Digit3'].includes(e.code)){activeTool=+e.code.slice(-1)-1;$$('.slot').forEach((x,j)=>x.classList.toggle('active',activeTool===j))}if(e.code==='KeyE'){if(camera.position.z<2.8&&camera.position.z>-2.8&&Math.abs(camera.position.x)<2.2){floor=1-floor;camera.position.y=floor?4.65:1.7;advance(.25);hud()}}if(e.code==='Space'){e.preventDefault();const d=ghost.position.distanceTo(camera.position),a=camera.getWorldDirection(new THREE.Vector3()).angleTo(ghost.position.clone().sub(camera.position).normalize());if(activeTool===1&&d<15&&a<.22){sleepUntil=performance.now()+30000;alert=0;advance(1)}else if(activeTool===0&&d<8)advance(.5);else if(activeTool===2&&a<.35)advance(1)}});addEventListener('keyup',e=>keys[e.code]=false);
-function breakWood(){if(woodTriggered)return;woodTriggered=true;alert=1;$('#alert').classList.remove('hidden');fragile.forEach((b,i)=>setTimeout(()=>{b.userData.broken=true;b.userData.vy=-.6-Math.random();b.userData.vr=(Math.random()-.5)*5},i*65));advance(1)}
-function updateGhost(dt,now){if(now<sleepUntil){ghost.visible=true;body.material.opacity=.1;return}body.material.opacity=.32;const d=ghost.position.distanceTo(camera.position);if(d<7||alert){alert=Math.min(1,alert+dt*.25);$('#alert').classList.remove('hidden');const t=camera.position.clone();t.y=floor?3.3:.2;const v=t.sub(ghost.position);v.y=0;if(v.length()>1.2)ghost.position.addScaledVector(v.normalize(),dt*(mode===4?2.45:1.5));ghost.position.y=floor?3.25:.2}else{$('#alert').classList.add('hidden');ghost.position.x=8+Math.sin(now*.0003)*3;ghost.position.z=-6+Math.cos(now*.00023)*2}ghost.rotation.y=Math.atan2(camera.position.x-ghost.position.x,camera.position.z-ghost.position.z);const dd=ghost.position.distanceTo(camera.position);fear=THREE.MathUtils.lerp(fear,dd<8?THREE.MathUtils.clamp((8-dd)/7*100,0,100):0,dt*1.5);if(dd<3.1)sanity=Math.max(0,sanity-dt*(mode===4?17:9));if(sanity<=0){sanity=100;camera.position.set(0,floor?4.65:1.7,11);ghost.position.set(8,floor?3.25:.2,-6);alert=0}}
-function collision(next){const r=.35;for(const o of colliders){const b=new THREE.Box3().setFromObject(o);if(next.x>b.min.x-r&&next.x<b.max.x+r&&next.z>b.min.z-r&&next.z<b.max.z+r)return false}return true}
-let last=performance.now();function loop(now){requestAnimationFrame(loop);const dt=Math.min(.035,(now-last)/1000);last=now;if(started&&controls.isLocked){const f=+keys.KeyW-+keys.KeyS,r=+keys.KeyD-+keys.KeyA,sprint=keys.ShiftLeft&&stamina>1;const speed=sprint?6.8:4.1;if(sprint&&(f||r))stamina=Math.max(0,stamina-dt*22);else stamina=Math.min(100,stamina+dt*13);const dir=new THREE.Vector3(r,0,-f);if(dir.lengthSq()){dir.normalize().applyAxisAngle(new THREE.Vector3(0,1,0),camera.rotation.y);const n=camera.position.clone().addScaledVector(dir,speed*dt);if(collision(n)){camera.position.x=n.x;camera.position.z=n.z}}camera.position.y=floor?4.65:1.7;if(floor&&camera.position.z>4.2&&Math.abs(camera.position.x)<3.2)breakWood();for(const b of fragile)if(b.userData.broken){b.userData.vy-=9.8*dt;b.position.y+=b.userData.vy*dt;b.rotation.x+=b.userData.vr*dt;b.rotation.z+=b.userData.vr*.6*dt}updateGhost(dt,now);hud()}composer.render()}requestAnimationFrame(loop);
+import * as THREE from 'three';
+import {PointerLockControls} from 'three/addons/controls/PointerLockControls.js';
+import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
+import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
+import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const clamp=THREE.MathUtils.clamp, lerp=THREE.MathUtils.lerp;
+const renderer=new THREE.WebGLRenderer({canvas:$('#game'),antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.72;
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x020405);scene.fog=new THREE.FogExp2(0x07090a,.035);
+const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.04,130);camera.position.set(0,1.68,8.8);
+const controls=new PointerLockControls(camera,renderer.domElement);
+const composer=new EffectComposer(renderer);composer.addPass(new RenderPass(scene,camera));composer.addPass(new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),.32,.62,.86));
+
+function noiseTexture(base=[48,46,41],amount=28,size=256){
+  const c=document.createElement('canvas');c.width=c.height=size;const g=c.getContext('2d'),im=g.createImageData(size,size);
+  for(let i=0;i<im.data.length;i+=4){const n=(Math.random()-.5)*amount;im.data[i]=base[0]+n;im.data[i+1]=base[1]+n;im.data[i+2]=base[2]+n;im.data[i+3]=255}
+  g.putImageData(im,0,0);for(let i=0;i<80;i++){g.fillStyle='rgba(0,0,0,'+(Math.random()*.08)+')';g.fillRect(Math.random()*size,Math.random()*size,Math.random()*60+8,Math.random()*4+1)}
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(4,4);t.colorSpace=THREE.SRGBColorSpace;return t
+}
+const wallMat=new THREE.MeshStandardMaterial({map:noiseTexture([62,65,60],42),roughness:.97,metalness:0});
+const floorMat=new THREE.MeshStandardMaterial({map:noiseTexture([50,39,29],30),roughness:.92});
+const woodMat=new THREE.MeshStandardMaterial({map:noiseTexture([70,44,25],34),roughness:.96});
+const darkWood=new THREE.MeshStandardMaterial({map:noiseTexture([44,27,18],25),roughness:.9});
+const metalMat=new THREE.MeshStandardMaterial({color:0x353b3e,roughness:.62,metalness:.42});
+const glassMat=new THREE.MeshPhysicalMaterial({color:0x788a90,roughness:.18,transmission:.2,transparent:true,opacity:.38});
+
+const staticColliders=[], fragile=[], interactables=[];
+function meshBox(name,p,s,mat=wallMat,opts={}){
+  const o=new THREE.Mesh(new THREE.BoxGeometry(...s),mat);o.name=name;o.position.set(...p);o.castShadow=opts.cast!==false;o.receiveShadow=true;scene.add(o);
+  if(opts.collider) staticColliders.push(o);
+  return o
+}
+meshBox('Ground',[0,-.18,0],[25,.36,21],floorMat);
+meshBox('Upper',[0,2.92,0],[25,.22,21],floorMat);
+for(const y of [1.35,4.35]){
+  meshBox('WallL',[-12.3,y,0],[.35,3,21],wallMat,{collider:true});
+  meshBox('WallR',[12.3,y,0],[.35,3,21],wallMat,{collider:true});
+  meshBox('WallB',[0,y,-10.3],[25,3,.35],wallMat,{collider:true});
+  meshBox('WallF',[0,y,10.3],[25,3,.35],wallMat,{collider:true});
+}
+// Room layout with door openings instead of solid strips across the whole floor.
+for(const y of [1.35,4.35]){
+  for(const [x,z,w,d] of [[-5,-6,.28,7],[-5,6,.28,7],[4.5,-6,.28,6.4],[4.5,6,.28,6.4],[-8,0,7,.28],[8,0,7,.28]]){
+    meshBox('Partition',[x,y,z],[w,3,d],wallMat,{collider:true});
+  }
+}
+// Stair volume is visual only; E interaction changes level.
+for(let i=0;i<12;i++) meshBox('Stair',[0,.1+i*.23,2.4-i*.42],[3.2,.2,.56],darkWood);
+const railMat=metalMat;
+for(const sx of [-1.75,1.75]){meshBox('rail',[sx,1.55,.1],[.07,2.8,.07],railMat);for(let i=0;i<5;i++)meshBox('post',[sx,.65+i*.43,2.2-i*.72],[.05,1.25,.05],railMat)}
+
+// Rotten second-floor corridor.
+for(let i=0;i<13;i++){const b=meshBox('RottenBoard',[-3+i*.5,3.08,6.1],[.44,.12,3.1],woodMat);b.userData={broken:false,vy:0,vr:(Math.random()-.5)*4};fragile.push(b)}
+// Furniture / props.
+function table(x,z,y=0){meshBox('table',[x,y+.68,z],[2.1,.16,1.15],darkWood,{collider:true});for(const dx of [-.85,.85])for(const dz of [-.4,.4])meshBox('leg',[x+dx,y+.32,z+dz],[.12,.72,.12],darkWood,{collider:true})}
+function cabinet(x,z,rot=0,y=0){const o=meshBox('cabinet',[x,y+1,z],[1.7,2,.55],darkWood,{collider:true});o.rotation.y=rot;for(const yy of [.55,1.05,1.55])meshBox('handle',[x+.73,y+yy,z-.29],[.08,.06,.05],metalMat)}
+table(-8,-6);table(8,-6);table(-8,6,3);table(8,6,3);cabinet(-10,-2);cabinet(10,-2,Math.PI);cabinet(-10,2,0,3);cabinet(10,2,Math.PI,3);
+for(const [x,z,y] of [[-8,3,0],[7,4,0],[-8,-3,3],[7,-5,3]]){const rug=meshBox('rug',[x,y+.025,z],[4,.03,2.2],new THREE.MeshStandardMaterial({color:0x31191b,roughness:1}));rug.rotation.y=.2}
+
+// Doors with simple interaction animation.
+const doors=[];
+function addDoor(x,z,rot=0,y=0){const pivot=new THREE.Group();pivot.position.set(x,y,z);scene.add(pivot);const d=new THREE.Mesh(new THREE.BoxGeometry(1.6,2.45,.16),darkWood);d.position.set(.8,1.22,0);d.castShadow=true;pivot.add(d);pivot.rotation.y=rot;pivot.userData={open:false,target:rot,base:rot};doors.push(pivot);interactables.push(pivot);return pivot}
+addDoor(-5,-1.1,Math.PI/2);addDoor(4.5,1.2,Math.PI/2);addDoor(-5,1.2,Math.PI/2,3);addDoor(4.5,-1.2,Math.PI/2,3);
+
+// Windows and cold moonlight.
+for(const [x,z,y,rot] of [[-12.08,-5,1.5,Math.PI/2],[12.08,5,1.5,Math.PI/2],[-12.08,4,4.5,Math.PI/2],[12.08,-4,4.5,Math.PI/2]]){
+  const w=meshBox('window',[x,y,z],[2.3,1.2,.08],glassMat);w.rotation.y=rot;
+  const l=new THREE.PointLight(0x7ca1b5,2.3,8);l.position.set(x*.92,y,z);scene.add(l)
+}
+scene.add(new THREE.HemisphereLight(0x53636c,0x080707,.18));
+const moon=new THREE.DirectionalLight(0xa7c8db,1.15);moon.position.set(-8,14,7);moon.castShadow=true;moon.shadow.mapSize.set(2048,2048);scene.add(moon);
+const practicals=[];
+for(const [x,z,y] of [[-7,-5,2.55],[7,-5,2.55],[-7,5,5.55],[7,5,5.55],[0,-4,2.55],[0,4,5.55]]){
+  const bulb=new THREE.PointLight(0xe7c58a,3.5,8,2);bulb.position.set(x,y,z);bulb.castShadow=false;bulb.userData.base=3.5+Math.random();scene.add(bulb);practicals.push(bulb);
+  const fixture=meshBox('fixture',[x,y+.15,z],[.18,.08,.18],metalMat)
+}
+const flashlight=new THREE.SpotLight(0xe8f2ff,34,24,.36,.5,1.55);flashlight.position.set(.08,-.06,.02);camera.add(flashlight);flashlight.target.position.set(0,-.05,-7);camera.add(flashlight.target);
+
+// Dust motes.
+const dustGeo=new THREE.BufferGeometry(),dustCount=750,dpos=new Float32Array(dustCount*3);
+for(let i=0;i<dustCount;i++){dpos[i*3]=(Math.random()-.5)*24;dpos[i*3+1]=Math.random()*6;dpos[i*3+2]=(Math.random()-.5)*20}
+dustGeo.setAttribute('position',new THREE.BufferAttribute(dpos,3));const dust=new THREE.Points(dustGeo,new THREE.PointsMaterial({color:0xb9b5aa,size:.018,transparent:true,opacity:.3,depthWrite:false}));scene.add(dust);
+
+// Ghost with layered translucent form.
+const ghost=new THREE.Group();const ghostMat=new THREE.MeshPhysicalMaterial({color:0xc2e0e4,transparent:true,opacity:.26,roughness:.12,transmission:.3,emissive:0x3f8b98,emissiveIntensity:1.25,depthWrite:false});
+const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.58,1.3,10,18),ghostMat);torso.position.y=1.15;ghost.add(torso);const head=new THREE.Mesh(new THREE.SphereGeometry(.45,24,18),ghostMat);head.position.y=2.1;ghost.add(head);
+for(const x of [-.15,.15]){const e=new THREE.Mesh(new THREE.SphereGeometry(.033,8,8),new THREE.MeshBasicMaterial({color:0xff3155}));e.position.set(x,2.16,-.41);ghost.add(e)}
+for(let i=0;i<10;i++){const strip=new THREE.Mesh(new THREE.PlaneGeometry(.25+.3*Math.random(),1.1+Math.random()),new THREE.MeshBasicMaterial({color:0x7ab0b6,transparent:true,opacity:.08,side:THREE.DoubleSide,depthWrite:false}));strip.position.set((Math.random()-.5)*1.2,.5,(Math.random()-.5)*.7);strip.rotation.y=Math.random()*Math.PI;ghost.add(strip)}
+const ghostGlow=new THREE.PointLight(0x58b0c2,3.8,9);ghostGlow.position.y=1.5;ghost.add(ghostGlow);ghost.position.set(8,.12,-6);scene.add(ghost);
+
+let coins=Number(localStorage.getItem('wraithCoins')||0),mode=0,missionIndex=Number(localStorage.getItem('wraithMission')||0),activeTool=0,started=false,floor=0,fear=0,sanity=100,stamina=100,alert=0,sleepUntil=0,woodTriggered=false,selectedChar='male',bob=0,lastStep=0;
+const keys={};const modeNames=['INVESTIGATION','NIGHTMARE','EXORCISM','RESCUE','HARDCORE'];
+$('#modes').innerHTML=modeNames.map((x,i)=>'<button class="mode '+(i===0?'selected':'')+'" data-i="'+i+'">'+x+'</button>').join('');
+$$('.mode').forEach(b=>b.onclick=()=>{mode=+b.dataset.i;$$('.mode').forEach(x=>x.classList.toggle('selected',x===b));hud()});
+$$('.card').forEach(b=>b.onclick=()=>{selectedChar=b.dataset.char;$$('.card').forEach(x=>x.classList.toggle('selected',x===b))});
+
+const acts=['Scan an EMF hotspot','Photograph the apparition','Collect spectral residue','Recover a cursed object','Check the upstairs cold spot','Record an EVP response','Inspect the broken corridor','Restore a disturbed seal','Survive a manifestation','Tag paranormal activity','Open a sealed room','Trace a freezing trail','Photograph a disturbed object','Deploy a sensor','Escape a hunt'];
+const rooms=['foyer','study','dining room','east bedroom','west bedroom','upper corridor','storage room','ritual room','stairwell','archive'];
+const missions=Array.from({length:5},(_,m)=>Array.from({length:150},(_,i)=>({title:acts[(i*7+m)%acts.length]+' in the '+rooms[(i*3+m)%rooms.length],target:1+(i%3),progress:0,reward:100})));
+const mcur=()=>missions[mode][missionIndex%150];
+function hud(){const m=mcur();$('#objective').textContent=m.title;$('#prog').style.width=Math.min(100,m.progress/m.target*100)+'%';$('#coins').textContent=coins;$('#bal').textContent=coins+' ◈';$('#fear').textContent=Math.round(fear)+'%';$('#fearB').style.width=fear+'%';$('#stam').textContent=Math.round(stamina)+'%';$('#stamB').style.width=stamina+'%';$('#san').textContent=Math.round(sanity)+'%';$('#sanB').style.width=sanity+'%';$('#floor').textContent=floor?'SECOND FLOOR':'GROUND FLOOR'}
+function advance(n=1){const m=mcur();m.progress+=n;hud();if(m.progress>=m.target){controls.unlock();coins+=100;localStorage.setItem('wraithCoins',coins);$('#done').textContent=m.title;$('#complete').classList.remove('hidden');hud()}}
+$('#next').onclick=()=>{$('#complete').classList.add('hidden');missionIndex++;localStorage.setItem('wraithMission',missionIndex);hud();controls.lock()};
+$('#play').onclick=()=>{$('#menu').classList.add('hidden');$('#hud').classList.remove('hidden');started=true;hud();controls.lock()};
+controls.addEventListener('unlock',()=>{if(started&&$('#complete').classList.contains('hidden')&&$('#shop').classList.contains('hidden')){$('#menu').classList.remove('hidden');$('#hud').classList.add('hidden')}});
+controls.addEventListener('lock',()=>{$('#menu').classList.add('hidden');$('#hud').classList.remove('hidden')});
+
+const toolNames=['EMF Meter','Sleep Dart','Spirit Camera','UV Torch','Salt Barrier','Trip Sensor','Thermal Scanner','EVP Recorder','Motion Grid','Holy Water','Spirit Bell','Iron Chain','Ward Chalk','Laser Grid','Night Vision','Audio Lure','Smoke Bomb','Decoy Doll','Seal Kit','Cursed Compass','Cold Sensor','Spectral Lens','Pulse Beacon','Door Jammer','Mirror Trap','Rune Flash','Ghost Bait','Static Probe','Incense Pack','Phase Alarm','Camera Drone','Blessed Candle','Noise Maker','Infrared Trap','EMF Beacon','Spirit Box','Thermal Mine','Spectral Net','Holy Seal','Sanity Injector','Flash Charge','Shadow Lamp','Entity Tagger','Aura Scope','Ritual Knife','Silver Bell','Ward Projector','Ghost Prank Box','Cryo Capsule','Phase Anchor','Void Lantern','Exorcism Kit','Pulse Mine','Spectral Jammer','Echo Trap','Runic Beacon'];
+$('#toolGrid').innerHTML=toolNames.map((n,i)=>'<button class="tool"><b>'+n+'</b><p>'+(['Detects unstable paranormal energy.','Disrupts the entity for a short time.','Captures contract evidence.','Specialist field equipment.'][i%4])+'</p><em>'+((i+1)*80)+' ◈</em></button>').join('');
+$('#shopBtn').onclick=()=>{$('#shop').classList.remove('hidden');hud()};$('#close').onclick=()=>$('#shop').classList.add('hidden');$$('.slot').forEach((b,i)=>b.onclick=()=>selectTool(i));
+function selectTool(i){activeTool=i;$$('.slot').forEach((x,j)=>x.classList.toggle('active',i===j))}
+function tip(t=''){const el=$('#tip');if(!t)el.classList.add('hidden');else{el.textContent=t;el.classList.remove('hidden')}}
+
+addEventListener('keydown',e=>{
+  keys[e.code]=true;
+  if(e.code==='KeyF')flashlight.visible=!flashlight.visible;
+  if(['Digit1','Digit2','Digit3'].includes(e.code))selectTool(+e.code.slice(-1)-1);
+  if(e.code==='KeyE')interact();
+  if(e.code==='Space'){e.preventDefault();useTool()}
+});
+addEventListener('keyup',e=>keys[e.code]=false);
+
+function interact(){
+  if(Math.abs(camera.position.x)<2.2&&camera.position.z<3.2&&camera.position.z>-2.9){floor=1-floor;camera.position.y=floor?4.58:1.68;camera.position.z=floor?.5:2.4;advance(.25);hud();return}
+  let best=null,bd=2.4;for(const d of doors){const wp=new THREE.Vector3();d.getWorldPosition(wp);wp.y=floor?4.2:1.2;const dist=wp.distanceTo(camera.position);if(dist<bd){bd=dist;best=d}}
+  if(best){best.userData.open=!best.userData.open;best.userData.target=best.userData.base+(best.userData.open?Math.PI*.47:0);advance(.25)}
+}
+function useTool(){
+  const d=ghost.position.distanceTo(camera.position),angle=camera.getWorldDirection(new THREE.Vector3()).angleTo(ghost.position.clone().sub(camera.position).normalize());
+  if(activeTool===1&&d<16&&angle<.28){sleepUntil=performance.now()+30000;alert=0;advance(1)}
+  else if(activeTool===0&&d<9){advance(.5)}
+  else if(activeTool===2&&angle<.36){advance(1)}
+}
+function breakWood(){if(woodTriggered)return;woodTriggered=true;alert=1;$('#alert').classList.remove('hidden');fragile.forEach((b,i)=>setTimeout(()=>{b.userData.broken=true;b.userData.vy=-.7-Math.random();b.userData.vr=(Math.random()-.5)*5},i*58));advance(1)}
+
+function playerBlocked(p){
+  const radius=.34,py=floor?4.0:1.0;
+  for(const o of staticColliders){
+    const b=new THREE.Box3().setFromObject(o);
+    if(py>b.min.y-.2&&py<b.max.y+.2&&p.x>b.min.x-radius&&p.x<b.max.x+radius&&p.z>b.min.z-radius&&p.z<b.max.z+radius)return true
+  }
+  return false
+}
+function movePlayer(dt){
+  const forward=+keys.KeyW-+keys.KeyS, strafe=+keys.KeyD-+keys.KeyA;if(!forward&&!strafe){bob=lerp(bob,0,dt*7);return}
+  const sprint=keys.ShiftLeft&&stamina>1;const base=selectedChar==='male'?4.55:4.3;const speed=sprint?base*1.55:base;
+  if(sprint)stamina=Math.max(0,stamina-dt*21);else stamina=Math.min(100,stamina+dt*13);
+  const fwd=new THREE.Vector3();camera.getWorldDirection(fwd);fwd.y=0;fwd.normalize();const right=new THREE.Vector3().crossVectors(fwd,new THREE.Vector3(0,1,0)).normalize().negate();
+  const dir=fwd.multiplyScalar(forward).add(right.multiplyScalar(strafe));if(dir.lengthSq()>0)dir.normalize();
+  const nextX=camera.position.clone();nextX.x+=dir.x*speed*dt;if(!playerBlocked(nextX))camera.position.x=nextX.x;
+  const nextZ=camera.position.clone();nextZ.z+=dir.z*speed*dt;if(!playerBlocked(nextZ))camera.position.z=nextZ.z;
+  bob+=dt*(sprint?14:9.5);const y0=floor?4.58:1.68;camera.position.y=y0+Math.sin(bob)*.032;camera.fov=lerp(camera.fov,sprint?76:72,dt*8);camera.updateProjectionMatrix();
+  const stepGap=sprint?.28:.42;if(performance.now()-lastStep>stepGap*1000){lastStep=performance.now()}
+}
+function updateGhost(dt,now){
+  if(now<sleepUntil){torso.material.opacity=.08;ghost.rotation.z=lerp(ghost.rotation.z,1.15,dt*2);return}
+  torso.material.opacity=.26;ghost.rotation.z=lerp(ghost.rotation.z,0,dt*3);
+  const sameFloor=Math.abs(ghost.position.y-(floor?3.1:.1))<1.2,d=ghost.position.distanceTo(camera.position);
+  if((sameFloor&&d<8.5)||alert>.05){alert=Math.min(1,alert+dt*.3);$('#alert').classList.remove('hidden');const target=camera.position.clone();target.y=floor?3.1:.1;const v=target.sub(ghost.position);v.y=0;if(v.length()>1.3)ghost.position.addScaledVector(v.normalize(),dt*(mode===4?2.7:1.65));ghost.position.y=floor?3.1:.1}
+  else{$('#alert').classList.add('hidden');ghost.position.x=8+Math.sin(now*.00029)*3.1;ghost.position.z=-5.6+Math.cos(now*.00023)*2.2}
+  ghost.rotation.y=Math.atan2(camera.position.x-ghost.position.x,camera.position.z-ghost.position.z);
+  ghost.children.forEach((c,i)=>{if(c.isMesh&&i>2)c.position.y=.45+Math.sin(now*.003+i)*.15});
+  const dd=ghost.position.distanceTo(camera.position);fear=lerp(fear,sameFloor&&dd<9?clamp((9-dd)/8*100,0,100):0,dt*1.5);
+  const drain=selectedChar==='female'?.68:1;if(sameFloor&&dd<3.2)sanity=Math.max(0,sanity-dt*(mode===4?18:10)*drain);
+  if(sanity<=0){sanity=100;camera.position.set(0,floor?4.58:1.68,8.8);ghost.position.set(8,floor?3.1:.1,-6);alert=0}
+}
+function nearbyTips(){
+  if(Math.abs(camera.position.x)<2.2&&camera.position.z<3.2&&camera.position.z>-2.9){tip('E · USE STAIRS');return}
+  for(const d of doors){const wp=new THREE.Vector3();d.getWorldPosition(wp);wp.y=floor?4.2:1.2;if(wp.distanceTo(camera.position)<2.4){tip('E · OPEN / CLOSE DOOR');return}}
+  tip('')
+}
+let last=performance.now();
+function loop(now){
+  requestAnimationFrame(loop);const dt=Math.min(.035,(now-last)/1000);last=now;
+  dust.rotation.y+=dt*.01;
+  practicals.forEach((l,i)=>l.intensity=l.userData.base*(.78+.22*Math.sin(now*.003+i*2.1))*(Math.random()>.985?.18:1));
+  for(const d of doors)d.rotation.y=lerp(d.rotation.y,d.userData.target,dt*5.5);
+  if(started&&controls.isLocked){
+    movePlayer(dt);if(!keys.ShiftLeft)stamina=Math.min(100,stamina+dt*10);
+    if(floor&&camera.position.z>4.45&&Math.abs(camera.position.x)<3.5)breakWood();
+    for(const b of fragile)if(b.userData.broken){b.userData.vy-=9.8*dt;b.position.y+=b.userData.vy*dt;b.rotation.x+=b.userData.vr*dt;b.rotation.z+=b.userData.vr*.55*dt}
+    updateGhost(dt,now);nearbyTips();hud();
+  }
+  composer.render()
+}
+requestAnimationFrame(loop);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);composer.setSize(innerWidth,innerHeight)});
 hud();
-</script></body></html>
+</script>
+</body></html>
