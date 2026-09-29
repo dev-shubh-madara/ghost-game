@@ -210,7 +210,7 @@ function movePlayer(dt){
   const forward=+keys.KeyW-+keys.KeyS, strafe=+keys.KeyD-+keys.KeyA;if(!forward&&!strafe){bob=lerp(bob,0,dt*7);return}
   const sprint=keys.ShiftLeft&&stamina>1;const base=selectedChar==='male'?4.55:4.3;const speed=sprint?base*1.55:base;
   if(sprint)stamina=Math.max(0,stamina-dt*21);else stamina=Math.min(100,stamina+dt*13);
-  const fwd=new THREE.Vector3();camera.getWorldDirection(fwd);fwd.y=0;fwd.normalize();const right=new THREE.Vector3().crossVectors(fwd,new THREE.Vector3(0,1,0)).normalize().negate();
+  const fwd=new THREE.Vector3();camera.getWorldDirection(fwd);fwd.y=0;fwd.normalize();const right=new THREE.Vector3().crossVectors(fwd,new THREE.Vector3(0,1,0)).normalize();
   const dir=fwd.multiplyScalar(forward).add(right.multiplyScalar(strafe));if(dir.lengthSq()>0)dir.normalize();
   const nextX=camera.position.clone();nextX.x+=dir.x*speed*dt;if(!playerBlocked(nextX))camera.position.x=nextX.x;
   const nextZ=camera.position.clone();nextZ.z+=dir.z*speed*dt;if(!playerBlocked(nextZ))camera.position.z=nextZ.z;
