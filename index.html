@@ -11,7 +11,7 @@ button{font:inherit;color:inherit;cursor:pointer}canvas{position:fixed;inset:0;w
 #vignette{position:fixed;inset:0;z-index:4;pointer-events:none;background:radial-gradient(circle at center,transparent 38%,rgba(0,0,0,.35) 62%,rgba(0,0,0,.92) 100%);mix-blend-mode:multiply}
 #grain{position:fixed;inset:-60px;z-index:5;pointer-events:none;opacity:.045;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.84' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.9'/%3E%3C/svg%3E");animation:grain .18s steps(2) infinite}@keyframes grain{0%{transform:translate(0,0)}25%{transform:translate(-2%,1%)}50%{transform:translate(1%,-2%)}75%{transform:translate(2%,2%)}100%{transform:translate(-1%,-1%)}}
 .panel{position:fixed;z-index:20;left:4vw;top:50%;transform:translateY(-50%);width:min(660px,92vw);padding:30px;background:linear-gradient(135deg,rgba(5,7,8,.97),rgba(5,7,8,.68));border:1px solid #ffffff20;box-shadow:0 35px 120px #000;backdrop-filter:blur(20px)}
-.ey{font-size:10px;letter-spacing:.27em;color:var(--acid);font-weight:900}h1{font-size:clamp(54px,7vw,94px);line-height:.8;letter-spacing:-.065em;margin:12px 0 20px}h1 span{font-weight:250;color:#8e9792}.lead{color:#aab2ae;line-height:1.55;max-width:560px}.label{font-size:10px;letter-spacing:.18em;color:#b2bab6;margin:18px 0 9px}.chars,.modes{display:grid;gap:8px}.chars{grid-template-columns:1fr 1fr}.modes{grid-template-columns:repeat(5,1fr)}
+.ey{font-size:10px;letter-spacing:.27em;color:var(--acid);font-weight:900}h1{font-size:clamp(54px,7vw,94px);line-height:.8;letter-spacing:-.065em;margin:12px 0 20px}h1 span{font-weight:250;color:#8e9792}.lead{color:#aab2ae;line-height:1.55;max-width:560px}.label{font-size:10px;letter-spacing:.18em;color:#b2bab6;margin:18px 0 9px}.chars,.modes{display:grid;gap:8px}.chars{grid-template-columns:1fr 1fr}.modes{grid-template-columns:1fr}
 .card,.mode{border:1px solid #ffffff1c;background:#0b0e0f;padding:12px;text-align:left;transition:.2s}.card:hover,.mode:hover{transform:translateY(-1px);border-color:#ffffff4a}.card.selected,.mode.selected{border-color:var(--acid);box-shadow:inset 0 0 0 1px var(--acid),0 0 24px #dfff5510}
 .portrait{height:78px;border-radius:3px;margin-bottom:9px;position:relative;overflow:hidden;background:radial-gradient(circle at 50% 30%,#747a75 0 9%,#303431 10% 18%,#101313 19% 100%)}
 .portrait:after{content:"";position:absolute;left:34%;top:15%;width:32%;height:73%;border-radius:45% 45% 34% 34%;background:linear-gradient(#cdb29f 0 34%,#222625 35% 100%);box-shadow:0 0 32px #000}.female .portrait:after{background:linear-gradient(#c9a79e 0 34%,#3a2f2f 35% 100%)}
@@ -28,6 +28,7 @@ button{font:inherit;color:inherit;cursor:pointer}canvas{position:fixed;inset:0;w
 .journal{position:absolute;right:24px;top:90px;max-width:290px;padding:15px;background:#050708d9;border:1px solid #ffffff25;font-size:11px;line-height:1.65;color:#c3c9bd}.journal strong{color:var(--acid);letter-spacing:.12em;font-size:10px}.portrait{background-size:cover;background-position:center top;height:110px}.portrait:after{display:none}.card[data-char="male"] .portrait{background-image:url('assets/ethan-reference.png')}.card[data-char="female"] .portrait{background-image:url('assets/maya-reference.png')}.micro{font-size:10px}.panel{max-height:94vh;overflow:auto}@media(max-width:700px){.journal{top:130px;right:12px;max-width:200px;font-size:10px}}
 select{background:#151c17;color:#dfff55;border:1px solid #ffffff40;padding:6px;margin-left:10px}#assetStatus{display:block;font-size:9px;margin-top:8px;color:#9aada5}.location{position:absolute;left:50%;top:28px;transform:translateX(-50%);font-size:10px;letter-spacing:.18em;color:#d0b888}
 @media(max-width:700px){.stats{bottom:100px}.floor{bottom:78px;right:12px}.location{display:none}}
+.online{margin-top:16px;border-top:1px solid #ffffff25;padding-top:12px}.online input{background:#111918;color:white;border:1px solid #536254;padding:10px;max-width:100%;margin:4px 0}.online button{margin:4px;padding:9px}.online p{font-size:12px;color:#aab2ae}.online ul{padding-left:18px;font-size:12px}.torch-status{position:absolute;top:110px;left:26px;color:var(--acid);font-size:12px}.torch-status.blackout{color:var(--danger)}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 </head>
@@ -35,17 +36,18 @@ select{background:#151c17;color:#dfff55;border:1px solid #ffffff40;padding:6px;m
 <canvas id="game"></canvas><div id="vignette"></div><div id="grain"></div>
 
 <section id="menu" class="panel">
-  <div class="ey">SINGLE-PLAYER PARANORMAL INVESTIGATION</div>
+  <div class="ey">TORCH SURVIVAL · SOLO / TWO-PLAYER CO-OP</div>
   <h1>WRAITH<br><span>HOUSE</span></h1>
-  <p class="lead">Explore two vast floors. Read abandoned notes, recover the objects they describe, and finish each ritual. The starting sanctuary always keeps the entity out.</p>
+  <p class="lead">One touch means death. Keep the visible wraith in your torch beam to freeze it. Every 9 seconds, your torch cuts out for 1 second. Find clues together across two vast floors; the starting sanctuary stays safe.</p>
   <div class="label">CHOOSE INVESTIGATOR</div>
   <div class="chars">
     <button class="card selected" data-char="male"><div class="portrait"></div><b>ETHAN</b><small>Field Technician · faster sprint</small></button>
-    <button class="card female" data-char="female"><div class="portrait"></div><b>MAYA</b><small>Occult Specialist · slower sanity drain</small></button>
+    <button class="card female" data-char="female"><div class="portrait"></div><b>MAYA</b><small>Occult Specialist · field researcher</small></button>
   </div>
   <div class="label">GAME MODE</div><div id="modes" class="modes"></div>
   <div class="label">GRAPHICS <select id="quality"><option value="balanced">Balanced</option><option value="high" selected>High</option><option value="ultra">Ultra</option></select> <span id="assetStatus">LOADING BLENDER INTERIORS…</span></div><div class="actions"><button id="play" class="primary">ENTER THE HOUSE</button><button id="shopBtn" class="secondary">EQUIPMENT STORE</button></div>
-  <div class="micro">WASD move · Mouse look · Shift sprint · F flashlight · E pick up / interact · Space jump · 1/2/3 tools · R use tool · H heal · Q ward · V change view · Esc pause</div>
+  <div class="online"><button id="onlineToggle" class="secondary">ACCOUNTS &amp; FRIENDS</button><section id="onlinePanel" class="hidden"><p id="onlineStatus" role="status">Checking online service…</p><form id="authForm"><input id="email" type="email" placeholder="Email" autocomplete="email" required aria-label="Email"><input id="password" type="password" placeholder="Password (at least 12 characters)" minlength="12" autocomplete="current-password" required aria-label="Password"><button class="primary" type="submit">LOG IN</button><button id="signup" type="button" class="secondary">CREATE ACCOUNT</button></form><div id="accountPanel" class="hidden"><p id="playerId"></p><button id="signout" class="secondary">LOG OUT</button><form id="friendForm"><input id="friendId" placeholder="Friend’s player ID" required aria-label="Friend player ID"><button class="secondary">SEND FRIEND REQUEST</button></form><button id="refreshFriends" class="secondary">REFRESH</button><ul id="friends"></ul><ul id="roomInvites"></ul><button id="leaveRoom" class="secondary hidden">LEAVE CO-OP</button><p id="lobbyStatus"></p></div></section></div>
+  <div class="micro">WASD move · Mouse look · Shift sprint · F flashlight · E pick up / interact · Space jump · 1/2/3 tools · R use tool · V change view · Esc pause</div>
 </section>
 
 <aside id="hud" class="hidden">
@@ -56,14 +58,14 @@ select{background:#151c17;color:#dfff55;border:1px solid #ffffff40;padding:6px;m
     <div class="stat"><span>STAMINA</span><div class="bar"><i id="stamB"></i></div><b id="stam">100%</b></div>
     <div class="stat"><span>SANITY</span><div class="bar"><i id="sanB"></i></div><b id="san">100%</b></div>
   </div>
-  <div class="inv"><button class="slot active">1 · EMF</button><button class="slot">2 · SLEEP DART</button><button class="slot">3 · CAMERA</button></div>
-  <div id="alert" class="alert hidden">ENTITY ALERTED</div><div id="tip" class="tip hidden"></div><div id="floor" class="floor">GROUND FLOOR</div><div class="cross"></div><div id="journal" class="journal"></div><div id="location" class="location"></div>
+  <div class="inv"><button class="slot active">1 · EMF</button><button class="slot">2 · TORCH</button><button class="slot">3 · CAMERA</button></div>
+  <div id="torchStatus" class="torch-status"></div><div id="alert" class="alert hidden">ENTITY ALERTED</div><div id="tip" class="tip hidden"></div><div id="floor" class="floor">GROUND FLOOR</div><div class="cross"></div><div id="journal" class="journal"></div><div id="location" class="location"></div>
 </aside>
 
 <section id="shop" class="modal hidden"><div class="box"><button id="close" class="close">✕</button><div class="ey">FIELD ARMORY</div><h2>Equipment Store</h2><p>Balance: <b id="bal">0 ◈</b></p><div id="toolGrid" class="shop"></div></div></section>
 <section id="complete" class="modal hidden"><div class="box" style="max-width:430px;text-align:center"><div class="ey">CONTRACT STEP COMPLETE</div><h2 id="done"></h2><p>Reward deposited.</p><h1 style="font-size:50px;color:var(--acid);line-height:1">+100 ◈</h1><button id="next" class="primary">CONTINUE</button></div></section>
 
-<section id="failed" class="modal hidden"><div class="box" style="max-width:460px"><div class="ey">SIGNAL LOST</div><h2>The house claimed you.</h2><p>Your completed contracts and coins are safe. Retry this objective with full sanity.</p><button id="retry" class="primary">RETURN TO THE FOYER</button></div></section>
+<section id="failed" class="modal hidden"><div class="box" style="max-width:460px"><div class="ey">SIGNAL LOST</div><h2>You are dead, dear.</h2><p>Your completed contracts and coins are safe. Return to the sanctuary to try again. In co-op, the host restarts the round for both players.</p><button id="retry" class="primary">RETURN TO THE FOYER</button></div></section>
 <script type="module">
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
@@ -212,14 +214,14 @@ function applyQuality(value){quality=value in presets?value:'high';const p=prese
 
 const saved=readSave();
 let coins=saved.coins,mode=0,missionIndex=saved.progress[0],activeTool=0,started=false,floor=0,fear=0,sanity=100,stamina=100,alert=0,sleepUntil=0,woodTriggered=false,selectedChar='male',bob=0,lastStep=0;
-const keys={};const modeNames=['INVESTIGATION','NIGHTMARE','EXORCISM','RESCUE','HARDCORE'];
+const keys={};const modeNames=['TORCH SURVIVAL'];
 $('#modes').innerHTML=modeNames.map((x,i)=>'<button class="mode '+(i===0?'selected':'')+'" data-i="'+i+'">'+x+'</button>').join('');
 $$('.mode').forEach(b=>b.onclick=()=>{mode=+b.dataset.i;missionIndex=Math.min(149,saved.progress[mode]);placeObjective();$('#play').textContent=saved.progress[mode]>=150?'MODE COMPLETE':'ENTER THE HOUSE';$$('.mode').forEach(x=>x.classList.toggle('selected',x===b));hud()});
 $$('.card').forEach(b=>b.onclick=()=>{selectedChar=b.dataset.char;$$('.card').forEach(x=>x.classList.toggle('selected',x===b))});
 
 const itemNames=['silver locket','brass key','wax seal','lost field recorder','engraved mirror'];
 const finalKinds=['scan','photo','seal','collect','survive'];
-const missions=Array.from({length:5},(_,m)=>Array.from({length:150},(_,i)=>{const ring=i===0?1:1+(i%11),a=(i*137.5+m*36)*Math.PI/180;const x=Math.round(Math.cos(a)*ring*36/40)*40+5,z=Math.round(Math.sin(a)*ring*36/40)*40+5;return {kind:finalKinds[m],title:['Identify the haunting','Document the apparition','Bind the wraith','Recover the missing kit','Endure the hunt'][m],location:{name:`${roomType(Math.round(x/40),Math.round(z/40),i%2,1,1)} · sector ${Math.round(x/40)}, ${Math.round(z/40)}`,x,z,floor:i%2},item:itemNames[(i+m)%5],stage:0,target:m===4?20:1,progress:0,reward:100,paid:false};}));
+const missions=Array.from({length:1},(_,m)=>Array.from({length:150},(_,i)=>{const ring=i===0?1:1+(i%11),a=(i*137.5+m*36)*Math.PI/180;const x=Math.round(Math.cos(a)*ring*36/40)*40+5,z=Math.round(Math.sin(a)*ring*36/40)*40+5;return {kind:finalKinds[m],title:['Identify the haunting','Document the apparition','Bind the wraith','Recover the missing kit','Endure the hunt'][m],location:{name:`${roomType(Math.round(x/40),Math.round(z/40),i%2,1,1)} · sector ${Math.round(x/40)}, ${Math.round(z/40)}`,x,z,floor:i%2},item:itemNames[(i+m)%5],stage:0,target:m===4?20:1,progress:0,reward:100,paid:false};}));
 const mcur=()=>missions[mode][missionIndex%150];
 const marker=new THREE.Group();const markerOrb=new THREE.Mesh(new THREE.IcosahedronGeometry(.18,1),new THREE.MeshStandardMaterial({color:0xdfff55,emissive:0xdfff55,emissiveIntensity:1}));marker.add(markerOrb);const markerLight=new THREE.PointLight(0xdfff55,1.4,3);marker.add(markerLight);scene.add(marker);
 const note=meshBox('Hint note',[1,1.03,8],[.5,.04,.35],new THREE.MeshStandardMaterial({color:0xdfcda4,roughness:1}));
@@ -229,16 +231,16 @@ const ritualPoint=new THREE.Vector3(-2,1.1,35);
 function placeObjective(){const m=mcur(),l=m.location;note.visible=m.stage===0;marker.position.copy(m.stage===1?new THREE.Vector3(l.x,l.floor*3+.9,l.z):ritualPoint);marker.visible=m.stage>0;}
 function atObjective(){const m=mcur();if(floor!==(m.stage===1?m.location.floor:0))return false;return camera.position.distanceTo(marker.position)<2.5;}
 function objectiveText(){const m=mcur();if(m.stage===0)return 'Pick up the handwritten hint from the sanctuary desk (E).';if(m.stage===1)return `Find the ${m.item}: ${m.location.floor?'upper':'ground'} floor, ${m.location.name}, X ${m.location.x} / Z ${m.location.z}.`;return `Bring the ${m.item} to the ritual pedestal. ${m.kind==='scan'?'Scan it with EMF (1 + R).':m.kind==='photo'?'Photograph the ghost near the pedestal (3 + R).':m.kind==='survive'?'Press E at the pedestal to start the 20-second hunt.':'Press E to use the item.'}`;}
-function hud(){const m=mcur();$('#location').textContent=currentRoom().toUpperCase();$('#objective').textContent=`${modeNames[mode]} · ${missionIndex+1}/150 — ${objectiveText()}`;$('#journal').innerHTML=`<strong>FIELD JOURNAL</strong><br>${m.stage===0?'No hint collected.':`Hint: ${m.location.floor?'Upstairs':'Ground floor'} · X ${m.location.x}, Z ${m.location.z}<br>Search for: ${m.item}`}<br>Inventory: ${m.stage===2?m.item:'empty'}<br>${inSanctuary(camera.position)?'SANCTUARY — SAFE':`Position X ${Math.round(camera.position.x)}, Z ${Math.round(camera.position.z)}`}<br>${m.stage>0?Math.round(camera.position.distanceTo(marker.position))+' m to '+(m.stage===1?'item':'ritual'):''}`;$('#prog').style.width=Math.min(100,m.progress/m.target*100)+'%';$('#coins').textContent=coins;$('#bal').textContent=coins+' ◈';$('#fear').textContent=Math.round(fear)+'%';$('#fearB').style.width=fear+'%';$('#stam').textContent=Math.round(stamina)+'%';$('#stamB').style.width=stamina+'%';$('#san').textContent=Math.round(sanity)+'%';$('#sanB').style.width=sanity+'%';$('#floor').textContent=(floor?'SECOND FLOOR':'GROUND FLOOR')+` · H: ${saved.injectors} HEALS · Q: ${saved.wards} WARDS`}
-function advance(n=1){if(!started||!controls.isLocked)return;const m=mcur();if(m.paid||m.stage!==2)return;m.progress=Math.min(m.target,m.progress+n);hud();if(m.progress>=m.target){m.paid=true;huntActive=false;coins+=100;saved.progress[mode]=Math.min(150,missionIndex+1);save();$('#done').textContent=m.title;$('#complete').classList.remove('hidden');controls.unlock();hud();tone(660,.25);}}
-$('#next').onclick=()=>{$('#complete').classList.add('hidden');if(saved.progress[mode]>=150){started=false;$('#menu').classList.remove('hidden');$('#hud').classList.add('hidden');$('#play').textContent='MODE COMPLETE — CHOOSE ANOTHER';return;}missionIndex=saved.progress[mode];placeObjective();hud();controls.lock();};
-$('#play').onclick=()=>{if(saved.progress[mode]>=150)return;audioStart();placeObjective();$('#menu').classList.add('hidden');$('#hud').classList.remove('hidden');started=true;hud();controls.lock()};
-controls.addEventListener('unlock',()=>{if(started&&$('#complete').classList.contains('hidden')&&$('#shop').classList.contains('hidden')&&$('#failed').classList.contains('hidden')){$('#menu').classList.remove('hidden');$('#hud').classList.add('hidden')}});
+function hud(){const m=mcur();$('#location').textContent=currentRoom().toUpperCase();$('#objective').textContent=`${modeNames[mode]} · ${missionIndex+1}/150 — ${objectiveText()}`;$('#journal').innerHTML=`<strong>FIELD JOURNAL</strong><br>${m.stage===0?'No hint collected.':`Hint: ${m.location.floor?'Upstairs':'Ground floor'} · X ${m.location.x}, Z ${m.location.z}<br>Search for: ${m.item}`}<br>Inventory: ${m.stage===2?m.item:'empty'}<br>${inSanctuary(camera.position)?'SANCTUARY — SAFE':`Position X ${Math.round(camera.position.x)}, Z ${Math.round(camera.position.z)}`}<br>${m.stage>0?Math.round(camera.position.distanceTo(marker.position))+' m to '+(m.stage===1?'item':'ritual'):''}`;$('#prog').style.width=Math.min(100,m.progress/m.target*100)+'%';$('#coins').textContent=coins;$('#bal').textContent=coins+' ◈';$('#fear').textContent=Math.round(fear)+'%';$('#fearB').style.width=fear+'%';$('#stam').textContent=Math.round(stamina)+'%';$('#stamB').style.width=stamina+'%';$('#san').textContent=Math.round(sanity)+'%';$('#sanB').style.width=sanity+'%';$('#floor').textContent=(floor?'SECOND FLOOR':'GROUND FLOOR')+' · TOUCH = DEATH'}
+function advance(n=1){if(net?.room&&!net.isHost)return;if(dead||!started||!controls.isLocked)return;const m=mcur();if(m.paid||m.stage!==2)return;m.progress=Math.min(m.target,m.progress+n);hud();if(m.progress>=m.target){m.paid=true;huntActive=false;coins+=100;saved.progress[mode]=Math.min(150,missionIndex+1);save();$('#done').textContent=m.title;$('#complete').classList.remove('hidden');controls.unlock();hud();tone(660,.25);}}
+$('#next').onclick=()=>{if(net?.room&&!net.isHost){$('#done').textContent='Waiting for the host to continue';return;}$('#complete').classList.add('hidden');if(saved.progress[mode]>=150){started=false;$('#menu').classList.remove('hidden');$('#hud').classList.add('hidden');$('#play').textContent='MODE COMPLETE — CHOOSE ANOTHER';return;}missionIndex=saved.progress[mode];placeObjective();hud();controls.lock();};
+$('#play').onclick=()=>{if(dead||saved.progress[mode]>=150)return;if(net?.room&&!net.canPlay()){tip('Waiting for your friend to connect and the host to start.');return;}audioStart();placeObjective();$('#menu').classList.add('hidden');$('#hud').classList.remove('hidden');started=true;hud();controls.lock()};
+controls.addEventListener('unlock',()=>{if(started&&!dead&&$('#complete').classList.contains('hidden')&&$('#shop').classList.contains('hidden')&&$('#failed').classList.contains('hidden')){$('#menu').classList.remove('hidden');$('#hud').classList.add('hidden')}});
 controls.addEventListener('lock',()=>{$('#menu').classList.add('hidden');$('#hud').classList.remove('hidden')});
 
 const toolNames=['EMF Meter','Sleep Dart','Spirit Camera','UV Torch','Salt Barrier','Trip Sensor','Thermal Scanner','EVP Recorder','Motion Grid','Holy Water','Spirit Bell','Iron Chain','Ward Chalk','Laser Grid','Night Vision','Audio Lure','Smoke Bomb','Decoy Doll','Seal Kit','Cursed Compass','Cold Sensor','Spectral Lens','Pulse Beacon','Door Jammer','Mirror Trap','Rune Flash','Ghost Bait','Static Probe','Incense Pack','Phase Alarm','Camera Drone','Blessed Candle','Noise Maker','Infrared Trap','EMF Beacon','Spirit Box','Thermal Mine','Spectral Net','Holy Seal','Sanity Injector','Flash Charge','Shadow Lamp','Entity Tagger','Aura Scope','Ritual Knife','Silver Bell','Ward Projector','Ghost Prank Box','Cryo Capsule','Phase Anchor','Void Lantern','Exorcism Kit','Pulse Mine','Spectral Jammer','Echo Trap','Runic Beacon'];
-const availableTools=[{name:'EMF Meter',price:0,description:'Scan marked anomalies at close range.'},{name:'Sleep Dart',price:0,description:'Aim at the entity to stop it for 30 seconds. 35-second cooldown.'},{name:'Spirit Camera',price:0,description:'Capture the entity within 16 metres, in your sights.'},{name:'Sanity Injector',price:200,description:'Restore 35 sanity. Consumed on use.'},{name:'Salt Ward',price:250,description:'Repel the entity for 12 seconds. Consumed on use.'},{name:'Torch Upgrade',price:400,description:'Permanent brighter, longer-range flashlight.'}];
-function renderShop(){ $('#toolGrid').innerHTML=availableTools.map((t,i)=>`<button class="tool" data-buy="${i}" ${i<3||(i===5&&saved.torch)?'disabled':''}><b>${t.name}</b><p>${t.description}</p><em>${i<3?'STANDARD ISSUE':i===5&&saved.torch?'OWNED':t.price+' ◈'}</em></button>`).join('')+`<p class="micro">${toolNames.length-6} additional equipment concepts are planned, not purchasable.</p>`;$$('[data-buy]').forEach(b=>b.onclick=()=>{const i=+b.dataset.buy,t=availableTools[i];if(i<3||coins<t.price||(i===5&&saved.torch))return;coins-=t.price;if(i===3)saved.injectors++;if(i===4)saved.wards++;if(i===5)saved.torch=true;save();applyTorch();renderShop();hud();});}
+const availableTools=[{name:'EMF Meter',price:0,description:'Scan marked anomalies at close range.'},{name:'Torch',price:0,description:'The only tool that freezes the ghost. Aim directly at it.'},{name:'Spirit Camera',price:0,description:'Capture the entity within 16 metres, in your sights.'},{name:'Sanity Injector',price:200,description:'Unavailable in Torch Survival: contact kills instantly.'},{name:'Salt Ward',price:250,description:'Unavailable: only torch light affects this ghost.'},{name:'Torch Upgrade',price:400,description:'Permanent brighter, longer-range flashlight.'}];
+function renderShop(){ $('#toolGrid').innerHTML=availableTools.map((t,i)=>`<button class="tool" data-buy="${i}" ${i<5||(i===5&&saved.torch)?'disabled':''}><b>${t.name}</b><p>${t.description}</p><em>${i<3?'STANDARD ISSUE':i<5?'UNAVAILABLE':i===5&&saved.torch?'OWNED':t.price+' ◈'}</em></button>`).join('')+`<p class="micro">${toolNames.length-6} additional equipment concepts are planned, not purchasable.</p>`;$$('[data-buy]').forEach(b=>b.onclick=()=>{const i=+b.dataset.buy,t=availableTools[i];if(i<5||coins<t.price||(i===5&&saved.torch))return;coins-=t.price;if(i===3)saved.injectors++;if(i===4)saved.wards++;if(i===5)saved.torch=true;save();applyTorch();renderShop();hud();});}
 $('#shopBtn').onclick=()=>{$('#shop').classList.remove('hidden');renderShop();hud();};$('#close').onclick=()=>$('#shop').classList.add('hidden');$$('.slot').forEach((b,i)=>b.onclick=()=>selectTool(i));
 function applyTorch(){flashlight.intensity=saved.torch?55:34;flashlight.distance=saved.torch?32:24;}
 applyTorch();
@@ -246,11 +248,11 @@ function selectTool(i){activeTool=i;$$('.slot').forEach((x,j)=>x.classList.toggl
 function tip(t=''){const el=$('#tip');if(!t)el.classList.add('hidden');else{el.textContent=t;el.classList.remove('hidden')}}
 
 addEventListener('keydown',e=>{
-  if(['Space','ArrowUp','ArrowDown'].includes(e.code))e.preventDefault();if(!started||!controls.isLocked)return;keys[e.code]=true;if(e.repeat)return;
+  if(['Space','ArrowUp','ArrowDown'].includes(e.code))e.preventDefault();if(dead||!started||!controls.isLocked)return;keys[e.code]=true;if(e.repeat)return;
   if(e.code==='KeyV')thirdPerson=!thirdPerson;
-  if(e.code==='KeyF')flashlight.visible=!flashlight.visible;
+  if(e.code==='KeyF')torchWanted=!torchWanted;
   if(['Digit1','Digit2','Digit3'].includes(e.code))selectTool(+e.code.slice(-1)-1);
-  if(e.code==='KeyE')interact();if(e.code==='KeyH'&&saved.injectors>0&&sanity<100){saved.injectors--;sanity=Math.min(100,sanity+35);save();tone(520,.2);}if(e.code==='KeyQ'&&saved.wards>0){saved.wards--;wardUntil=gameTime+12000;save();tone(220,.4);}
+  if(e.code==='KeyE')interact();
   if(e.code==='Space'){e.preventDefault();jump();}if(e.code==='KeyR')useTool();
 });
 addEventListener('keyup',e=>keys[e.code]=false);addEventListener('mousedown',e=>{if(e.button===0&&controls.isLocked)useTool();});
@@ -258,7 +260,8 @@ function clearKeys(){for(const k of Object.keys(keys))keys[k]=false;}
 addEventListener('blur',()=>{clearKeys();if(controls.isLocked)controls.unlock();});controls.addEventListener('unlock',clearKeys);
 
 function interact(){
-  if(!started||!controls.isLocked)return;
+  if(net?.room&&!net.isHost){tip('The host carries the clues; protect them with your torch.');return;}
+  if(dead||!started||!controls.isLocked)return;
   const m=mcur();if(m.stage===0&&floor===0&&camera.position.distanceTo(note.position)<2.5){m.stage=1;placeObjective();tone(520,.2);hud();return;}
   if(m.stage===1&&atObjective()){m.stage=2;placeObjective();tone(720,.2);hud();return;}
   if(m.stage===2&&atObjective()){if(m.kind==='survive'){huntActive=true;alert=1;}else if(['collect','seal'].includes(m.kind))advance();return;}
@@ -267,9 +270,9 @@ function interact(){
 }
 const raycaster=new THREE.Raycaster();let toolReady=0,wardUntil=0,gameTime=0;
 function visibleGhost(){if(!ghost.visible)return false;const target=ghost.position.clone().add(new THREE.Vector3(0,1.5,0)),v=target.sub(camera.position),d=v.length();if(d>16||Math.abs(ghost.position.y-floor*3)>.8)return false;const direction=v.normalize();if(camera.getWorldDirection(new THREE.Vector3()).angleTo(direction)>.3)return false;raycaster.set(camera.position,direction);return !collisionBoxes.some(box=>{const hit=raycaster.ray.intersectBox(box,new THREE.Vector3());return hit&&hit.distanceTo(camera.position)<d-.7;});}
-function useTool(){if(!started||!controls.isLocked||mcur().paid)return;
+function useTool(){if(dead||!started||!controls.isLocked||mcur().paid)return;
   if(activeTool===0){tone(180+Math.max(0,10-camera.position.distanceTo(ghost.position))*70,.09);if(mcur().stage===2&&mcur().kind==='scan'&&atObjective())advance();}
-  else if(activeTool===1&&gameTime>=toolReady&&visibleGhost()){sleepUntil=gameTime+30000;toolReady=gameTime+35000;alert=0;tone(90,.3);}
+  else if(activeTool===1){torchWanted=!torchWanted;}
   else if(activeTool===2&&visibleGhost()){tone(900,.08);if(mcur().stage===2&&mcur().kind==='photo'&&atObjective())advance();}
 }
 function breakWood(){if(woodTriggered)return;woodTriggered=true;alert=1;$('#alert').classList.remove('hidden');fragile.forEach((b,i)=>setTimeout(()=>{b.userData.broken=true;b.userData.vy=-.7-Math.random();b.userData.vr=(Math.random()-.5)*5},i*58));tone(65,.5)}
@@ -285,13 +288,15 @@ function playerBlocked(p){
 let feetY=0,velocityY=0,grounded=true,huntActive=false,ghostAwake=false,graceUntil=60000;
 function onStairs(p){return Math.abs(p.x)<1.75&&p.z>=-3.1&&p.z<=3.1;}
 function supportHeight(p){if(onStairs(p))return clamp((3-p.z)/2,0,3);const rotten=Math.abs(p.x)<3.5&&p.z>4.5&&p.z<7.7;if(rotten&&woodTriggered)return 0;return feetY>=2.75?3:0;}
-function jump(){if(grounded){velocityY=5.2;grounded=false;tone(70,.05,.02);}}
+function jump(){if(!dead&&grounded){velocityY=5.2;grounded=false;tone(70,.05,.02);}}
 function movePlayer(dt){
+  if(dead)return;
   const forward=Number(!!keys.KeyW)-Number(!!keys.KeyS),strafe=Number(!!keys.KeyD)-Number(!!keys.KeyA),moving=!!(forward||strafe);
-  const sprint=moving&&(keys.ShiftLeft||keys.ShiftRight)&&stamina>1,speed=(selectedChar==='male'?5.2:5)*(sprint?1.7:1);
+  const sprint=moving&&(keys.ShiftLeft||keys.ShiftRight)&&stamina>1,speed=(selectedChar==='male'?5.2:5)*3*(sprint?1.7:1);
   stamina=clamp(stamina+dt*(sprint?-17:13),0,100);
   const fwd=camera.getWorldDirection(new THREE.Vector3());fwd.y=0;fwd.normalize();const right=new THREE.Vector3().crossVectors(fwd,new THREE.Vector3(0,1,0));const dir=fwd.multiplyScalar(forward).addScaledVector(right,strafe).normalize();
-  for(const axis of ['x','z']){const next=camera.position.clone();next[axis]+=dir[axis]*speed*dt;if(!playerBlocked(next)&&(!onStairs(next)||supportHeight(next)<=feetY+.3))camera.position[axis]=next[axis];}
+  const steps=Math.max(1,Math.ceil(speed*dt/.12));
+  for(let i=0;i<steps;i++)for(const axis of ['x','z']){const next=camera.position.clone();next[axis]+=dir[axis]*speed*dt/steps;if(!playerBlocked(next)&&(!onStairs(next)||supportHeight(next)<=feetY+.3)){camera.position[axis]=next[axis];if(grounded&&onStairs(next))feetY=supportHeight(next);}}
   const support=supportHeight(camera.position);
   if(grounded&&feetY-support<.4){feetY=support;velocityY=0;}else{grounded=false;velocityY-=14*dt;feetY+=velocityY*dt;if(feetY<=support){if(velocityY< -7)sanity=Math.max(1,sanity-12);feetY=support;velocityY=0;grounded=true;}}
   // Keep jumps below solid ceilings while allowing stairwell passage.
@@ -316,6 +321,7 @@ for(const sign of [-1,1]){
 let thirdPerson=false;const loadedCharacters={};
 const followCamera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.04,130);
 function updateInvestigator(){
+  if(dead){investigator.visible=false;hands.visible=false;for(const obj of Object.values(loadedCharacters))obj.visible=false;scenePass.camera=followCamera;ssao.camera=followCamera;return;}
   investigator.position.set(camera.position.x,feetY,camera.position.z);const look=camera.getWorldDirection(new THREE.Vector3());investigator.rotation.y=Math.atan2(look.x,look.z);ponytail.visible=selectedChar==='female';
   investigator.visible=started&&thirdPerson&&!loadedCharacters[selectedChar];hands.visible=started&&!thirdPerson;
   for(const [key,obj] of Object.entries(loadedCharacters)){obj.visible=started&&thirdPerson&&key===selectedChar;obj.position.copy(investigator.position);obj.rotation.y=investigator.rotation.y;}
@@ -333,19 +339,48 @@ async function loadBlenderModels(){
 if(typeof fetch==='function'){loadBlenderModels();loadRoomKit();}
 
 function inSanctuary(p){return Math.hypot(p.x,p.z-8.8)<SAFE_RADIUS;}
+const GHOST_SPEED=1.5*5,CONTACT_RADIUS=.85;
+let dead=false,deathElapsed=0,corpse=null,severedHead=null,torchWanted=true,torchEpoch=0,net=null,peer=null,lastNetSend=0,round=0;
+const remoteAvatar=investigator.clone(true);remoteAvatar.visible=false;scene.add(remoteAvatar);
+function torchOn(now){return torchWanted&&((now-torchEpoch)%10000)<9000&&!dead;}
+function updateTorch(now){flashlight.visible=torchOn(now);const remaining=(10000-(now-torchEpoch)%10000)/1000;$('#torchStatus').textContent=remaining<=1?'BLACKOUT · '+remaining.toFixed(1)+'s':torchWanted?'TORCH · blackout in '+(remaining-1).toFixed(1)+'s':'TORCH OFF · F to turn on';$('#torchStatus').classList.toggle('blackout',remaining<=1);}
+function beamCovers(position,direction,on){
+  if(!on||!ghost.visible)return false;
+  const v=ghost.position.clone().add(new THREE.Vector3(0,1.5,0)).sub(position),distance=v.length();
+  if(distance>flashlight.distance||new THREE.Vector3(...direction).angleTo(v)>.32)return false;
+  raycaster.set(position,v.normalize());return !collisionBoxes.some(box=>{const hit=raycaster.ray.intersectBox(box,new THREE.Vector3());return hit&&hit.distanceTo(position)<distance-.3;});
+}
+function killPlayer(){
+  if(dead)return;dead=true;flashlight.visible=false;sanity=0;deathElapsed=0;clearKeys();controls.unlock();tone(45,.8);
+  const source=loadedCharacters[selectedChar]||investigator;corpse=source.clone(true);corpse.visible=true;corpse.position.set(camera.position.x,feetY,camera.position.z);scene.add(corpse);
+  severedHead=new THREE.Group();scene.add(severedHead);corpse.updateMatrixWorld(true);
+  // Detach the head and hair in world space, then tumble them independently.
+  if(loadedCharacters[selectedChar]){const parts=[];corpse.traverse(part=>{if(part.isMesh&&/^(Head|Hair|Ponytail|Eye)/.test(part.name))parts.push(part);});for(const part of parts)severedHead.attach(part);}else{for(let i=0;i<3;i++){const part=corpse.children[3];if(part)severedHead.attach(part);}}
+  const center=camera.position.clone();for(const part of severedHead.children)part.position.sub(center);severedHead.position.copy(center);
+  followCamera.position.copy(center).add(new THREE.Vector3(2,1,2));followCamera.lookAt(center.clone().add(new THREE.Vector3(0,-.6,0)));
+}
+function animateDeath(dt){if(!dead)return;deathElapsed+=dt;if(corpse)corpse.rotation.z=Math.min(1.5,deathElapsed*1.8);if(severedHead){severedHead.position.y=Math.max(feetY+.18,feetY+1.68+deathElapsed*.8-4.9*deathElapsed*deathElapsed);severedHead.position.x=camera.position.x+Math.min(1.4,deathElapsed*.8);severedHead.rotation.z=deathElapsed*4;}if(deathElapsed>=2.2)$('#failed').classList.remove('hidden');}
 function updateGhost(dt,now){
-  // Sanctuary is protected on both floors, including after the grace period.
-  if(!started||now<graceUntil||inSanctuary(camera.position)){ghost.visible=false;ghostAwake=false;alert=0;fear=lerp(fear,0,dt*3);$('#alert').classList.add('hidden');return;}
-  if(!ghostAwake){const away=camera.position.clone().sub(new THREE.Vector3(0,camera.position.y,8.8)).normalize();ghost.position.copy(camera.position).addScaledVector(away,20);ghost.position.y=floor*3+.08;ghostAwake=true;}
-  ghost.visible=true;
-  if(now<sleepUntil||now<wardUntil){ghostMat.opacity=.2;return;}ghostMat.opacity=.58;
-  const target=camera.position.clone();target.y=floor*3+.08;const v=target.sub(ghost.position),d=v.length();
-  if(d>1.2)ghost.position.addScaledVector(v.normalize(),dt*([1.5,2.2,1.8,2,2.8][mode])); // Intentionally ignores wall colliders.
+  if(net?.room&&!net.isHost)return;
+  if(mcur().paid){ghost.visible=false;ghostAwake=false;return;}
+  const players=[];if(started&&!dead&&now>=graceUntil&&!inSanctuary(camera.position))players.push({position:camera.position,feet:feetY});
+  if(peer&&!peer.dead&&peer.active&&now>=60000&&!inSanctuary(new THREE.Vector3(...peer.p)))players.push({position:new THREE.Vector3(...peer.p),feet:peer.p[1]-1.68});
+  if(!players.length){ghost.visible=false;ghostAwake=false;alert=0;fear=lerp(fear,0,dt*3);$('#alert').classList.add('hidden');return;}
+  players.sort((a,b)=>a.position.distanceToSquared(ghost.position)-b.position.distanceToSquared(ghost.position));
+  const victim=players[0];
+  if(!ghostAwake){const away=victim.position.clone().sub(new THREE.Vector3(0,victim.position.y,8.8)).normalize();ghost.position.copy(victim.position).addScaledVector(away,20);ghost.position.y=victim.feet+.08;ghostAwake=true;}
+  ghost.visible=true;ghostMat.opacity=.78;
+  // Contact kills even when the apparition has been frozen by light.
+  const touches=p=>ghost.position.distanceTo(new THREE.Vector3(p.x,p.y-1.6,p.z))<=CONTACT_RADIUS;
+  if(!dead&&touches(camera.position))killPlayer();
+  const frozen=beamCovers(camera.position,camera.getWorldDirection(new THREE.Vector3()).toArray(),torchOn(now))||(peer&&!peer.dead&&beamCovers(new THREE.Vector3(...peer.p),peer.dir,peer.torch&&peer.lit&&((now-torchEpoch)%10000)<9000));
+  const target=victim.position.clone();target.y=victim.feet+.08;const v=target.sub(ghost.position),d=v.length();
+  // Clamp each move at its target so fast motion cannot tunnel past a player.
+  if(!frozen&&d>0)ghost.position.addScaledVector(v.normalize(),Math.min(d,GHOST_SPEED*dt));
   if(inSanctuary(ghost.position)){ghost.visible=false;ghostAwake=false;return;}
-  ghost.rotation.y=Math.atan2(camera.position.x-ghost.position.x,camera.position.z-ghost.position.z);ghost.rotation.z=Math.sin(now*.001)*.025;
+  if(!dead&&touches(camera.position))killPlayer();
+  ghost.rotation.y=Math.atan2(victim.position.x-ghost.position.x,victim.position.z-ghost.position.z);
   $('#alert').classList.toggle('hidden',d>14);fear=lerp(fear,clamp((14-d)/12*100,0,100),dt*2);
-  if(d<2.3)sanity=Math.max(0,sanity-dt*(mode===4?18:10)*(selectedChar==='female'?.68:1));
-  if(sanity<=0){$('#failed').classList.remove('hidden');controls.unlock();tone(45,.8);}
 }
 function nearbyTips(){
   if(mcur().stage===0&&floor===0&&camera.position.distanceTo(note.position)<2.5){tip('E · PICK UP HINT');return;}
@@ -353,20 +388,41 @@ function nearbyTips(){
   if(onStairs(camera.position)){tip('WALK UP / DOWN · SPACE TO JUMP');return;}
   tip('');
 }
-$('#retry').onclick=()=>{sanity=100;fear=0;stamina=100;floor=0;feetY=0;velocityY=0;grounded=true;alert=0;sleepUntil=0;wardUntil=0;huntActive=false;ghostAwake=false;ghost.visible=false;graceUntil=gameTime+60000;camera.position.copy(SPAWN);mcur().progress=0;$('#failed').classList.add('hidden');placeObjective();streamWorld(true);controls.lock();};
+function resetRound(){
+  dead=false;deathElapsed=0;if(corpse)scene.remove(corpse);if(severedHead)scene.remove(severedHead);corpse=null;severedHead=null;torchWanted=true;torchEpoch=0;gameTime=0;
+  sanity=100;fear=0;stamina=100;floor=0;feetY=0;velocityY=0;grounded=true;alert=0;sleepUntil=0;wardUntil=0;huntActive=false;ghostAwake=false;ghost.visible=false;graceUntil=60000;camera.position.copy(SPAWN);mcur().progress=0;mcur().stage=0;mcur().paid=false;$('#failed').classList.add('hidden');$('#complete').classList.add('hidden');placeObjective();streamWorld(true);
+}
+$('#retry').onclick=()=>{if(net?.room&&!net.isHost){$('#failed p').textContent='Waiting for the host to restart the round.';return;}round++;resetRound();controls.lock();};
+function networkFrame(now){
+  if(!net?.room){peer=null;remoteAvatar.visible=false;return;}
+  if(peer){remoteAvatar.visible=peer.active&&!peer.dead;remoteAvatar.position.set(peer.p[0],peer.p[1]-1.68,peer.p[2]);remoteAvatar.rotation.y=Math.atan2(peer.dir[0],peer.dir[2]);}
+  if(now-lastNetSend<100)return;lastNetSend=now;
+  net.send({round,p:camera.position.toArray(),dir:camera.getWorldDirection(new THREE.Vector3()).toArray(),torch:torchOn(gameTime)&&started&&!dead,lit:beamCovers(camera.position,camera.getWorldDirection(new THREE.Vector3()).toArray(),torchOn(gameTime)),dead,active:started,world:net.isHost?{time:gameTime,ghost:ghost.position.toArray(),visible:ghost.visible,round,mission:missionIndex,stage:mcur().stage,paid:mcur().paid,wood:woodTriggered,doors:doors.map(d=>d.userData.open)}:null});
+}
+function receivePeer(data){
+  peer=data;
+  if(net.isHost)return;
+  const w=data.world;if(!w)return;
+  if(w.round!==round){round=w.round;resetRound();}
+  if(data.active&&!started){started=true;$('#play').textContent='JOIN ROUND';}
+  gameTime=w.time;const justPaid=w.paid&&(missionIndex!==w.mission||!mcur().paid);missionIndex=w.mission;mcur().stage=w.stage;mcur().paid=w.paid;if(justPaid&&!dead){$('#done').textContent='Team ritual complete';$('#complete').classList.remove('hidden');controls.unlock();}else if(!w.paid)$('#complete').classList.add('hidden');placeObjective();ghost.visible=w.visible;ghost.position.fromArray(w.ghost);
+  if(w.wood&&!woodTriggered)breakWood();w.doors.forEach((open,i)=>{if(doors[i]){doors[i].userData.open=open;doors[i].userData.target=doors[i].userData.base+(open?Math.PI*.47:0);}});
+  if(!dead&&ghost.visible&&!inSanctuary(camera.position)&&ghost.position.distanceTo(new THREE.Vector3(camera.position.x,feetY+.08,camera.position.z))<=CONTACT_RADIUS)killPlayer();
+}
+if(typeof fetch==='function')import('./online/client.js').then(({setupOnline})=>setupOnline({onPeer:receivePeer,onDisconnect:()=>{peer=null;if(started){started=false;controls.unlock();$('#menu').classList.remove('hidden');$('#hud').classList.add('hidden');}resetRound();},onRoom:()=>{started=false;round=0;resetRound();}})).then(client=>net=client).catch(error=>{$('#onlineStatus').textContent='Online service unavailable. Solo play is available.';console.warn(error);});
 let last=performance.now();
 function loop(now){
   requestAnimationFrame(loop);const dt=Math.min(.035,(now-last)/1000);last=now;
   dust.rotation.y+=dt*.01;markerOrb.rotation.y+=dt;
   practicals.forEach((l,i)=>l.intensity=l.userData.base*(.78+.22*Math.sin(now*.003+i*2.1))*(Math.random()>.985?.18:1));
   for(const d of doors)d.rotation.y=lerp(d.rotation.y,d.userData.target,dt*5.5);
-  if(started&&controls.isLocked){
-    gameTime+=dt*1000;movePlayer(dt);streamWorld();if(mcur().kind==='survive'&&huntActive&&ghost.visible&&!inSanctuary(camera.position))advance(dt);
+  if(started&&((controls.isLocked&&!dead)||net?.room)){
+    if(!net?.room||net.isHost)gameTime+=dt*1000;updateTorch(gameTime);if(controls.isLocked&&!dead)movePlayer(dt);streamWorld();if(mcur().kind==='survive'&&huntActive&&ghost.visible&&!inSanctuary(camera.position))advance(dt);
     if(floor&&camera.position.z>4.5&&camera.position.z<7.7&&Math.abs(camera.position.x)<3.5&&grounded)breakWood();
     for(const b of fragile)if(b.userData.broken&&b.position.y>.12){b.userData.vy-=9.8*dt;b.position.y+=b.userData.vy*dt;b.rotation.x+=b.userData.vr*dt;b.rotation.z+=b.userData.vr*.55*dt}
     updateGhost(dt,gameTime);nearbyTips();hud();
   }
-  updateInvestigator();composer.render()
+  animateDeath(dt);networkFrame(now);updateInvestigator();composer.render()
 }
 requestAnimationFrame(loop);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();followCamera.aspect=camera.aspect;followCamera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);composer.setSize(innerWidth,innerHeight)});
