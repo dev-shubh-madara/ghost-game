@@ -1,0 +1,19 @@
+{
+  "blender": "4.3.2",
+  "room_names": [
+    "Bedroom",
+    "Library",
+    "Infirmary",
+    "Dining",
+    "Nursery",
+    "Ritual"
+  ],
+  "room_size_m": [
+    17,
+    3,
+    17
+  ],
+  "rooms_per_floor": 2500,
+  "floors": 2,
+  "source": "blender/build_room_kit.py"
+}

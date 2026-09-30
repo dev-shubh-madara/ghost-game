@@ -1,19 +1,33 @@
 # Wraith House
 
-A single-player browser horror prototype built with Three.js. Static Vercel hosting; no backend or environment variables required. Import the repository with preset **Other**, empty build command and root output directory (`.`). A previous automatic Vercel deployment was blocked; GitHub push success does not imply deployment success.
+A single-player Three.js horror game prototype with Blender-built interiors. Static Vercel hosting; no backend or environment variables required.
 
 [Import into Vercel](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fdev-shubh-madara%2Fghost-game)
 
-## Current game
+Use framework preset **Other**, empty build command, and root output directory (`.`). GitHub pushes trigger a deployment only if the connected Vercel project allows the commit. A prior deployment was blocked by Vercel; successful code delivery is not proof of a live deployment.
 
-- **Two 1,000 × 1,000 metre floors**, world coordinates -500 to +500 on X/Z. Nearby 40m sectors are streamed as instanced geometry, with at most 25 active sectors. This is a repeated procedural environment, not two square kilometres of individually authored scenery.
-- Walk up/down the central stair flight. **Space jumps**. Stairs require no E interaction or teleportation. Gravity, landings, ceiling checks and collapsing rotten boards are implemented.
-- **Safe start:** no ghost during the first 60 seconds of active gameplay. The sanctuary within 22m of the spawn remains protected on both floors forever. Returning hides/removes the threat; leaving after the grace period respawns it 20m farther from the sanctuary. Retry grants a fresh grace period.
-- The ghost deliberately ignores walls and can move vertically between floors.
-- Each contract requires **hint pickup → find named item → pick up item → use it for the objective**. Press E near the sanctuary desk to collect a note. The journal records the item name, floor, sector and coordinates; an objective marker and distance guide the search. Return the item to the ritual pedestal outside the sanctuary.
-- Five modes, 150 generated contract steps per mode. Investigation uses an EMF scan; Nightmare requires a nearby apparition photo; Exorcism/Rescue consume the required item; Hardcore starts a timed hunt. These reuse mechanics and are not 750 handcrafted missions.
-- Standard EMF, camera and 30-second sleep dart; healing, salt-ward and permanent torch-upgrade purchases. Coins/inventory/completed progress persist locally. The current note/item stage resets when the page reloads.
-- Reward guards, failure/retry, sanity, stamina, flashlight, synthesized sounds and keyboard/mouse controls.
+## Included in this update
+
+- **Blender 4.3.2 was actually executed** to create/export the room kit and starter character meshes. Both editable `.blend` files and browser `.glb` assets are committed.
+- Two 1,000 × 1,000 metre floors. Each has 625 sectors and four enclosed rooms per sector: **2,500 rooms per floor / 5,000 total**. These repeat six furnished templates, not 5,000 individually designed rooms.
+- Bedroom, library, infirmary, dining room, nursery and ritual room templates with 1.9m entrances, walls, paneled ceilings, wood floors, trim, furniture, lamps and debris.
+- Colour, roughness and normal maps, instanced room geometry, fog, bloom, screen-space ambient occlusion and flashlight shadows.
+- Blender ghost and investigator models load by default. These are stylized starter models inspired by the references, not photoreal likenesses or professional animated rigs. Reference images remain the selection portraits.
+- Walkable stairs, jumping, gravity and collapsing boards. No E teleport is used for stairs.
+- A 60-second ghost-free introduction and a permanently protected sanctuary on both floors. The ghost can phase through walls outside the sanctuary.
+- Hint pickup → named-item search → item pickup → objective completion. The journal gives the floor, room type, sector and coordinates. Items require the correct floor.
+- Five modes with 150 generated contracts each, coins, three standard tools, consumable purchases, a torch upgrade, sanity/stamina and failure/retry.
+- First/third-person views and synthesized footsteps/equipment sounds. Progress, coins and inventory persist in browser localStorage; the current contract's item stage resets on reload.
+
+## Graphics presets
+
+| Preset | Nearby sectors | Maximum loaded rooms | Ambient occlusion | Flashlight shadow |
+| --- | ---: | ---: | --- | ---: |
+| Balanced | 3 × 3 | 72 | Off | 1024 px |
+| High | 5 × 5 | 200 | On | 2048 px |
+| Ultra | 5 × 5 | 200 | On | 4096 px |
+
+High is the default. Balanced disables bloom and reduces the pixel-ratio cap. Ultra raises the pixel-ratio cap and shadow resolution. There is **no measured RTX 3050 minimum specification or FPS guarantee**. Test on the target hardware before setting minimum requirements. This is not a commercial AAA production; the world repeats templates and character rigs/animations remain basic.
 
 ## Controls
 
@@ -22,7 +36,7 @@ A single-player browser horror prototype built with Three.js. Static Vercel host
 | WASD / mouse | Move / look |
 | Shift | Sprint |
 | Space | Jump |
-| E | Pick up notes/items, use an item at the pedestal, interact with doors |
+| E | Pick up hints/items; use an item at the ritual pedestal |
 | R or left mouse | Use selected equipment |
 | 1 / 2 / 3 | EMF / sleep dart / camera |
 | F | Flashlight |
@@ -30,32 +44,48 @@ A single-player browser horror prototype built with Three.js. Static Vercel host
 | V | First-person / third-person view |
 | Escape | Pause and release mouse |
 
-## Characters and Blender — status
+Pick up the note on the sanctuary desk first. Find the named item in its room, then return to the pedestal outside the sanctuary. Investigation requires an EMF scan; Nightmare requires a nearby apparition photo; Exorcism/Rescue use the item; Hardcore starts a timed hunt. Other equipment concepts are not sold as functioning tools. Multiplayer and mobile touch controls are not implemented.
 
-The supplied male/female reference images are the selection portraits. Runtime fallbacks include a pale long-haired ghost with a dress, olive-clothed investigator meshes and first-person sleeves/hands. **These are procedural stand-ins, not photoreal reconstructions of the references.** The third-person fallback has simple limb motion; it is not a professional rig.
-
-Laptop access was not connected during this update. No laptop access, Blender execution, generated GLB files or completed photoreal models are claimed.
-
-`blender/build_reference_characters.py` creates separate new Blender scenes and exports starter ghost/Ethan/Maya meshes. It does not delete the user's existing scene. It is a starting point for sculpting, UV work, materials and rigging, not an automatic photoreal reconstruction tool. Run from the repository root in an authorized Blender environment:
-
-```bash
-blender --background --python blender/build_reference_characters.py -- --output models
-```
-
-The script writes `ghost.glb`, `ethan.glb`, `maya.glb`, a `.blend` file and enables `models/manifest.json` only after all exports succeed. The browser loads these files through GLTFLoader when enabled, otherwise it keeps the fallbacks. Review the exported appearance before pushing enabled assets. The script passed Python syntax checks but has not been run in Blender here. The older house-builder script is retained as a historical small blockout and does not define the runtime kilometre-scale world.
-
-## Local run and validation
+## Run locally
 
 ```bash
 python -m http.server 8000
 ```
 
-Open http://localhost:8000 in a desktop browser with WebGL2 and pointer lock. Internet access is required for pinned Three.js 0.180.0 modules from jsDelivr. Mobile touch controls and multiplayer are not implemented.
+Open http://localhost:8000 in a desktop WebGL2 browser. Three.js 0.180.0 modules load from jsDelivr, so internet access is required. No production npm install is necessary.
 
-The gameplay regression suite uses actual Three.js geometry/math with stubbed rendering/browser APIs. It checks initialization, WASD, kilometre boundaries, stairs up/down, jump/landing, objective sequencing and reward protection, grace period and sanctuary enforcement on both floors, bounded chunk streaming, and corrupt-save recovery. Obtain `three@0.180.0/build/three.core.js` and save it as `/tmp/three.core.mjs`:
+## Blender source and rebuild
+
+- `models/haunted-rooms.blend`: editable six-template room kit. Templates intentionally overlap at the origin; isolate the named object to inspect one room.
+- `models/wraith_character_starters.blend`: separate scenes for the three starter characters.
+- `blender/build_room_kit.py`: room geometry and PBR-map generation.
+- `blender/build_reference_characters.py`: character generation/export.
+- `artifacts/blender-bedroom-preview.png`: a Blender Cycles render; lighting differs from the browser.
+
+From the repository root:
 
 ```bash
-THREE_CORE=/tmp/three.core.mjs node tests/game-regression.mjs
+blender --background --factory-startup --python blender/build_room_kit.py
+blender --background --factory-startup --python blender/build_reference_characters.py -- --output models
 ```
 
-A headless Chromium WebGL smoke test also passed module initialization, pointer lock, note pickup, movement, jumping, view switching and a hidden ghost at spawn with no JavaScript errors. Screenshots were inspected; the test served the same pinned Three.js modules locally because the browser could not fetch the CDN from this environment. This does not certify performance on every GPU. World repetition, modest starter meshes and synthesized effects remain production limitations.
+The browser accepts the uncompressed Blender exports. The committed GLBs were additionally optimized with glTF-Transform 4.2.1 and Meshoptimizer 0.22.0. To repeat that optional optimization:
+
+```bash
+npm install --prefix blender
+node blender/optimize_assets.mjs
+```
+
+The legacy `haunted_house_builder.py` remains a historical small blockout and does not define the runtime world.
+
+## Validation
+
+`tests/game-regression.mjs` uses actual Three.js geometry/math and stubbed rendering to check WASD, boundaries, room doors/walls, stairs in both directions, jumping/landing, mission ordering, reward guards, the sanctuary and bounded streaming. Set `THREE_CORE` to an installed `three@0.180.0/build/three.core.js`:
+
+```bash
+THREE_CORE=/path/to/three/build/three.core.js node tests/game-regression.mjs
+```
+
+`tests/browser-smoke.cjs` runs a headless Chromium WebGL check using the same pinned Three.js modules served locally. It checks Blender asset decoding, the six templates, character loading, pointer lock, hint pickup and Balanced/High rendering. It requires Playwright plus `QA_DEPS` pointing to a node_modules folder with three 0.180.0 and @sparticuz/chromium 133.0.0. `CHROMIUM_PATH` can override the browser executable. This is a functional rendering check, not a hardware performance benchmark.
+
+`artifacts/asset-validation.json` records asset sizes and SHA-256 hashes. Browser captures are available in `artifacts/`.

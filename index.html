@@ -26,6 +26,8 @@ button{font:inherit;color:inherit;cursor:pointer}canvas{position:fixed;inset:0;w
 .modal{position:fixed;z-index:30;inset:0;background:#000c;display:grid;place-items:center;backdrop-filter:blur(10px)}.box{width:min(940px,92vw);max-height:86vh;overflow:auto;padding:28px;background:#090c0d;border:1px solid #ffffff20}.shop{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:7px}.tool{padding:12px;border:1px solid #ffffff1b;background:#0e1112;text-align:left}.tool:hover{border-color:#ffffff45}.tool b{font-size:11px}.tool p{font-size:9px;color:var(--muted);min-height:28px}.tool em{color:var(--acid);font-style:normal;font-size:10px}.close{float:right;background:#15191a;border:1px solid #ffffff20;padding:8px 12px}
 @media(max-width:700px){.panel{left:3vw;width:94vw;padding:20px}.modes{grid-template-columns:repeat(3,1fr)}.inv .slot{width:86px}.stats{width:215px}.objective{left:15px;top:15px}.coins{right:15px;top:15px}}
 .journal{position:absolute;right:24px;top:90px;max-width:290px;padding:15px;background:#050708d9;border:1px solid #ffffff25;font-size:11px;line-height:1.65;color:#c3c9bd}.journal strong{color:var(--acid);letter-spacing:.12em;font-size:10px}.portrait{background-size:cover;background-position:center top;height:110px}.portrait:after{display:none}.card[data-char="male"] .portrait{background-image:url('assets/ethan-reference.png')}.card[data-char="female"] .portrait{background-image:url('assets/maya-reference.png')}.micro{font-size:10px}.panel{max-height:94vh;overflow:auto}@media(max-width:700px){.journal{top:130px;right:12px;max-width:200px;font-size:10px}}
+select{background:#151c17;color:#dfff55;border:1px solid #ffffff40;padding:6px;margin-left:10px}#assetStatus{display:block;font-size:9px;margin-top:8px;color:#9aada5}.location{position:absolute;left:50%;top:28px;transform:translateX(-50%);font-size:10px;letter-spacing:.18em;color:#d0b888}
+@media(max-width:700px){.stats{bottom:100px}.floor{bottom:78px;right:12px}.location{display:none}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 </head>
@@ -42,7 +44,7 @@ button{font:inherit;color:inherit;cursor:pointer}canvas{position:fixed;inset:0;w
     <button class="card female" data-char="female"><div class="portrait"></div><b>MAYA</b><small>Occult Specialist · slower sanity drain</small></button>
   </div>
   <div class="label">GAME MODE</div><div id="modes" class="modes"></div>
-  <div class="actions"><button id="play" class="primary">ENTER THE HOUSE</button><button id="shopBtn" class="secondary">EQUIPMENT STORE</button></div>
+  <div class="label">GRAPHICS <select id="quality"><option value="balanced">Balanced</option><option value="high" selected>High</option><option value="ultra">Ultra</option></select> <span id="assetStatus">LOADING BLENDER INTERIORS…</span></div><div class="actions"><button id="play" class="primary">ENTER THE HOUSE</button><button id="shopBtn" class="secondary">EQUIPMENT STORE</button></div>
   <div class="micro">WASD move · Mouse look · Shift sprint · F flashlight · E pick up / interact · Space jump · 1/2/3 tools · R use tool · H heal · Q ward · V change view · Esc pause</div>
 </section>
 
@@ -55,7 +57,7 @@ button{font:inherit;color:inherit;cursor:pointer}canvas{position:fixed;inset:0;w
     <div class="stat"><span>SANITY</span><div class="bar"><i id="sanB"></i></div><b id="san">100%</b></div>
   </div>
   <div class="inv"><button class="slot active">1 · EMF</button><button class="slot">2 · SLEEP DART</button><button class="slot">3 · CAMERA</button></div>
-  <div id="alert" class="alert hidden">ENTITY ALERTED</div><div id="tip" class="tip hidden"></div><div id="floor" class="floor">GROUND FLOOR</div><div class="cross"></div><div id="journal" class="journal"></div>
+  <div id="alert" class="alert hidden">ENTITY ALERTED</div><div id="tip" class="tip hidden"></div><div id="floor" class="floor">GROUND FLOOR</div><div class="cross"></div><div id="journal" class="journal"></div><div id="location" class="location"></div>
 </aside>
 
 <section id="shop" class="modal hidden"><div class="box"><button id="close" class="close">✕</button><div class="ey">FIELD ARMORY</div><h2>Equipment Store</h2><p>Balance: <b id="bal">0 ◈</b></p><div id="toolGrid" class="shop"></div></div></section>
@@ -69,6 +71,9 @@ import {PointerLockControls} from 'three/addons/controls/PointerLockControls.js'
 import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
 import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
 import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
+import {SSAOPass} from 'three/addons/postprocessing/SSAOPass.js';
+import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
+import {MeshoptDecoder} from 'three/addons/libs/meshopt_decoder.module.js';
 
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 function readSave(){try{const v=JSON.parse(localStorage.getItem('wraithSaveV2')||'{}');const integer=(n,max=999999)=>Number.isFinite(n)?Math.max(0,Math.min(max,Math.floor(n))):0;return {coins:integer(v.coins??Number(localStorage.getItem('wraithCoins')||0)),progress:Array.from({length:5},(_,i)=>integer(v.progress?.[i],150)),injectors:integer(v.injectors),wards:integer(v.wards),torch:v.torch===true};}catch{return {coins:0,progress:[0,0,0,0,0],injectors:0,wards:0,torch:false};}}
@@ -78,11 +83,11 @@ function audioStart(){try{audioCtx??=new AudioContext();audioCtx.resume();}catch
 function tone(hz,duration,volume=.05){if(!audioCtx)return;const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='triangle';o.frequency.setValueAtTime(hz,audioCtx.currentTime);g.gain.setValueAtTime(volume,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+duration);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+duration);}
 const clamp=THREE.MathUtils.clamp, lerp=THREE.MathUtils.lerp;
 const renderer=new THREE.WebGLRenderer({canvas:$('#game'),antialias:true,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
-const scene=new THREE.Scene();scene.background=new THREE.Color(0x020405);scene.fog=new THREE.FogExp2(0x07090a,.035);
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x020405);scene.fog=new THREE.FogExp2(0x11171a,.018);
 const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.04,130);camera.position.set(0,1.68,8.8);
 const controls=new PointerLockControls(camera,renderer.domElement);
-const composer=new EffectComposer(renderer);const scenePass=new RenderPass(scene,camera);composer.addPass(scenePass);composer.addPass(new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),.32,.62,.86));
+const composer=new EffectComposer(renderer);const scenePass=new RenderPass(scene,camera);composer.addPass(scenePass);const ssao=new SSAOPass(scene,camera,innerWidth,innerHeight);ssao.kernelRadius=5;ssao.minDistance=.004;ssao.maxDistance=.16;composer.addPass(ssao);const bloom=new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),.22,.5,.9);composer.addPass(bloom);composer.addPass(new OutputPass());
 
 function noiseTexture(base=[48,46,41],amount=28,size=256){
   const c=document.createElement('canvas');c.width=c.height=size;const g=c.getContext('2d'),im=g.createImageData(size,size);
@@ -112,47 +117,25 @@ const slabMat=floorMat.clone();slabMat.side=THREE.DoubleSide;
 const slab=new THREE.Mesh(new THREE.ShapeGeometry(slabShape),slabMat);slab.rotation.x=Math.PI/2;slab.position.y=3;slab.receiveShadow=true;scene.add(slab);
 meshBox('Roof',[0,6.1,0],[1000,.2,1000],wallMat);
 for(const y of [1.5,4.5]){for(const x of [-500,500])meshBox('Boundary',[x,y,0],[.3,3,1000],wallMat,{collider:true});for(const z of [-500,500])meshBox('Boundary',[0,y,z],[1000,3,.3],wallMat,{collider:true});}
-// Room layout with door openings instead of solid strips across the whole floor.
-for(const y of [1.35,4.35]){
-  for(const [x,z,w,d] of [[-5,-6,.28,7],[-5,6,.28,7],[4.5,-6,.28,6.4],[4.5,6,.28,6.4],[-8,0,7,.28],[8,0,7,.28]]){
-    meshBox('Partition',[x,y,z],[w,3,d],wallMat,{collider:true});
-  }
-}
 // Walkable stairs: the support surface follows this flight; no interaction teleport.
 for(let i=0;i<18;i++){const h=(i+1)/6;meshBox('Stair',[0,h/2,3-(i+.5)/3],[3.5,h,1/3+.01],darkWood);}
 for(const x of [-1.9,1.9])for(let i=0;i<10;i++)meshBox('Baluster',[x,.55+i/3,3-i*2/3],[.055,1.1,.055],metalMat);
 // Rotten second-floor corridor.
 for(let i=0;i<13;i++){const b=meshBox('RottenBoard',[-3+i*.5,3.08,6.1],[.44,.12,3.1],woodMat);b.userData={broken:false,vy:0,vr:(Math.random()-.5)*4};fragile.push(b)}
-// Furniture / props.
-function table(x,z,y=0){meshBox('table',[x,y+.68,z],[2.1,.16,1.15],darkWood,{collider:true});for(const dx of [-.85,.85])for(const dz of [-.4,.4])meshBox('leg',[x+dx,y+.32,z+dz],[.12,.72,.12],darkWood,{collider:true})}
-function cabinet(x,z,rot=0,y=0){const o=meshBox('cabinet',[x,y+1,z],[1.7,2,.55],darkWood,{collider:true});o.rotation.y=rot;for(const yy of [.55,1.05,1.55])meshBox('handle',[x+.73,y+yy,z-.29],[.08,.06,.05],metalMat)}
-table(-8,-6);table(8,-6);table(-8,6,3);table(8,6,3);cabinet(-10,-2);cabinet(10,-2,Math.PI);cabinet(-10,2,0,3);cabinet(10,2,Math.PI,3);
-for(const [x,z,y] of [[-8,3,0],[7,4,0],[-8,-3,3],[7,-5,3]]){const rug=meshBox('rug',[x,y+.025,z],[4,.03,2.2],new THREE.MeshStandardMaterial({color:0x31191b,roughness:1}));rug.rotation.y=.2}
-
 // Doors with simple interaction animation.
 const doors=[];
 function addDoor(x,z,rot=0,y=0){const pivot=new THREE.Group();pivot.position.set(x,y,z);scene.add(pivot);const d=new THREE.Mesh(new THREE.BoxGeometry(1.6,2.45,.16),darkWood);d.position.set(.8,1.22,0);d.castShadow=true;pivot.add(d);pivot.rotation.y=rot;pivot.userData={open:false,target:rot,base:rot};doors.push(pivot);interactables.push(pivot);return pivot}
-addDoor(-5,-1.1,Math.PI/2);addDoor(4.5,1.2,Math.PI/2);addDoor(-5,1.2,Math.PI/2,3);addDoor(4.5,-1.2,Math.PI/2,3);
+
 
 scene.add(new THREE.HemisphereLight(0x53636c,0x323029,1.05));
-const moon=new THREE.DirectionalLight(0xa7c8db,1.15);moon.position.set(-8,14,7);moon.castShadow=true;moon.shadow.mapSize.set(2048,2048);scene.add(moon);
+const moon=new THREE.DirectionalLight(0xa7c8db,1.15);moon.position.set(-8,14,7);moon.castShadow=false;moon.shadow.mapSize.set(2048,2048);scene.add(moon);
 const practicals=[];
 for(const [x,z,y] of [[-7,-5,2.55],[7,-5,2.55],[-7,5,5.55],[7,5,5.55],[0,-4,2.55],[0,4,5.55]]){
   const bulb=new THREE.PointLight(0xe7c58a,8,12,2);bulb.position.set(x,y,z);bulb.castShadow=false;bulb.userData.base=8+Math.random();scene.add(bulb);practicals.push(bulb);
   const fixture=meshBox('fixture',[x,y+.15,z],[.18,.08,.18],metalMat)
 }
-const flashlight=new THREE.SpotLight(0xe8f2ff,34,24,.36,.5,1.55);flashlight.position.set(.08,-.06,.02);camera.add(flashlight);flashlight.target.position.set(0,-.05,-7);camera.add(flashlight.target);scene.add(camera);
+const flashlight=new THREE.SpotLight(0xe8f2ff,34,24,.36,.5,1.55);flashlight.position.set(.08,-.06,.02);camera.add(flashlight);flashlight.target.position.set(0,-.05,-7);camera.add(flashlight.target);scene.add(camera);flashlight.castShadow=true;flashlight.shadow.mapSize.set(2048,2048);flashlight.shadow.bias=-.0002;flashlight.shadow.normalBias=.025;
 
-// Architectural detail uses shared materials and modest mesh counts.
-for(const level of [0,3]){
-  for(const x of [-10,-6,6,10])meshBox('ceiling beam',[x,level+2.72,0],[.18,.22,20],darkWood);
-  for(const z of [-10,10]){meshBox('skirting',[0,level+.12,z],[24,.24,.08],darkWood);meshBox('cornice',[0,level+2.55,z],[24,.13,.14],darkWood);}
-  for(const x of [-12,12])meshBox('skirting',[x,level+.12,0],[.08,.24,20],darkWood);
-  for(const x of [-8,8]){
-    meshBox('bookcase',[x,level+1.1,-9.7],[2.2,2.2,.4],darkWood,{collider:true});
-    for(let row=0;row<3;row++){meshBox('shelf',[x,level+.3+row*.6,-9.4],[2.1,.08,.5],woodMat);for(let j=0;j<8;j++)meshBox('book',[x-.85+j*.24,level+.55+row*.6,-9.4],[.16,.4+(j%3)*.04,.28],j%2?woodMat:wallMat);}
-  }
-}
 // Dust motes.
 const dustGeo=new THREE.BufferGeometry(),dustCount=750,dpos=new Float32Array(dustCount*3);
 for(let i=0;i<dustCount;i++){dpos[i*3]=(Math.random()-.5)*24;dpos[i*3+1]=Math.random()*6;dpos[i*3+2]=(Math.random()-.5)*20}
@@ -174,31 +157,58 @@ const cloth=new THREE.MeshStandardMaterial({color:0x384333,roughness:1});
 const skin=new THREE.MeshStandardMaterial({color:0xbda18c,roughness:.9});
 for(const x of [-.27,.27]){const sleeve=new THREE.Mesh(new THREE.CapsuleGeometry(.072,.33,5,10),cloth);sleeve.rotation.x=1.05;sleeve.position.set(x,-.34,-.35);hands.add(sleeve);const hand=new THREE.Mesh(new THREE.SphereGeometry(.067,12,10),skin);hand.scale.set(.8,.7,1.15);hand.position.set(x,-.24,-.58);hands.add(hand);}
 const heldTool=new THREE.Mesh(new THREE.BoxGeometry(.13,.085,.19),new THREE.MeshStandardMaterial({color:0x222a25,roughness:.98}));heldTool.position.set(.23,-.23,-.67);hands.add(heldTool);const toolScreen=new THREE.Mesh(new THREE.PlaneGeometry(.08,.045),new THREE.MeshBasicMaterial({color:0x83af69}));toolScreen.position.set(.23,-.225,-.57);hands.add(toolScreen);
-// Stream a 5x5 grid of nearby 40m sectors. Each floor is 25x25 sectors.
-const chunkMap=new Map(),unitBox=new THREE.BoxGeometry(1,1,1);let collisionBoxes=[],staticBoxes=null,lastChunkKey='';
+// Four enclosed rooms per sector per floor: 625 sectors x 4 x 2 = 5,000 rooms.
+const ROOM_TYPES=['Bedroom','Library','Infirmary','Dining','Nursery','Ritual'];
+const chunkMap=new Map(),unitBox=new THREE.BoxGeometry(1,1,1),roomTemplates=new Map(),roomBatches=[];
+let collisionBoxes=[],staticBoxes=null,lastChunkKey='',roomKitReady=false,roomKitLoading=false;
+const presets={balanced:{radius:1,dpr:1.25,ao:false,shadow:1024},high:{radius:2,dpr:1.6,ao:true,shadow:2048},ultra:{radius:2,dpr:2,ao:true,shadow:4096}};
+let quality='high';
+function roomType(cx,cz,level,sx,sz){return ROOM_TYPES[((cx*7+cz*11+level*3+(sx>0?1:0)+(sz>0?2:0))%6+6)%6];}
 function buildChunk(cx,cz){
-  const group=new THREE.Group(),boxes=[],sets=[[],[]],centerX=cx*40,centerZ=cz*40;
+  const group=new THREE.Group(),boxes=[],sets=[[],[]],rooms=[],centerX=cx*40,centerZ=cz*40;
   function add(x,y,z,w,h,d,mat=0,solid=false){sets[mat].push([x,y,z,w,h,d]);if(solid)boxes.push(new THREE.Box3(new THREE.Vector3(x-w/2,y-h/2,z-d/2),new THREE.Vector3(x+w/2,y+h/2,z+d/2)));}
-  if(cx!==0||cz!==0)for(const level of [0,3]){
-    for(const offset of [-12,12]){add(centerX+offset,level+1.5,centerZ-20,16,3,.28,0,true);add(centerX+20,level+1.5,centerZ+offset,.28,3,16,0,true);}
-    // Clear eight-metre openings through every sector boundary.
-    for(const offset of [-4.15,4.15]){add(centerX+offset,level+1.4,centerZ-19.8,.2,2.8,.4,1);add(centerX+19.8,level+1.4,centerZ+offset,.4,2.8,.2,1);}
-    add(centerX-11,level+.65,centerZ-9,2,.2,1.1,1,true);
-    for(const dx of [-.8,.8])for(const dz of [-.35,.35])add(centerX-11+dx,level+.3,centerZ-9+dz,.1,.6,.1,1);
-    add(centerX+13,level+1.1,centerZ-15,2.3,2.2,.6,1,true);
-    for(const x of [-15,15])add(centerX+x,level+2.8,centerZ,.18,.18,38,1);
+  for(const level of [0,3])for(const sx of [-1,1])for(const sz of [-1,1]){
+    const rx=centerX+sx*10.5,rz=centerZ+sz*10.5,rot=sz>0?Math.PI:0,type=roomType(cx,cz,level/3,sx,sz);
+    rooms.push({type,x:rx,y:level,z:rz,rot});
+    // Continuous enclosure with a 1.9m door centered on the corridor-facing side.
+    for(const x of [rx-8.5,rx+8.5])add(x,level+1.5,rz,.22,3,17,0,true);
+    const back=rz+sz*8.5,front=rz-sz*8.5;
+    add(rx,level+1.5,back,17,3,.22,0,true);
+    for(const dx of [-4.74,4.74])add(rx+dx,level+1.5,front,7.58,3,.22,0,true);
+    add(rx,level+2.72,front,1.9,.56,.22,0,false);
+    for(const dx of [-1.02,1.02])add(rx+dx,level+1.2,front,.12,2.4,.28,1,false);
+    // Local-space proxy boxes agree with the Blender furniture placement.
+    const furniture={Bedroom:[[-4,3,2.2,2.9,1.45],[4,5,2.4,1.1,.85],[5,8,2.6,.65,2.3],[-5,-4,2,.85,.84]],Library:[[-4,2,2.4,1,.85],[4,2,2.4,1,.85],[-5,8,2.2,.65,2.3],[-2,8,2.2,.65,2.3],[2,8,2.2,.65,2.3],[5,8,2.2,.65,2.3],[-5,-4,2.5,.65,2.3],[5,-4,2.5,.65,2.3]],Infirmary:[[-5,-3,2.2,2.9,1.45],[-5,3,2.2,2.9,1.45],[5,-3,2.2,2.9,1.45],[5,3,2.2,2.9,1.45],[0,6,2.4,1,.85]],Dining:[[0,1,5.2,1,.85],[-5,7,3,.7,2.3],[5,7,3,.7,2.3]],Nursery:[[-4,3,1.7,2.3,1.5],[4,3,1.7,2.3,1.5],[4,-3,2.4,1,.85]],Ritual:[[0,3,1.8,1.2,1.1],[-5,7,2,.7,2.3],[5,7,2,.7,2.3]]}[type];
+    for(const [fx,fy,w,d,h] of furniture){const x=rx+(sz>0?-fx:fx),z=rz+(sz>0?fy:-fy);add(x,level+h/2,z,w,h,d,1,true);}
   }
-  sets.forEach((entries,i)=>{if(!entries.length)return;const inst=new THREE.InstancedMesh(unitBox,i?darkWood:wallMat,entries.length),matrix=new THREE.Matrix4();entries.forEach(([x,y,z,w,h,d],j)=>{matrix.compose(new THREE.Vector3(x,y,z),new THREE.Quaternion(),new THREE.Vector3(w,h,d));inst.setMatrixAt(j,matrix);});inst.castShadow=true;inst.receiveShadow=true;inst.instanceMatrix.needsUpdate=true;group.add(inst);});
-  scene.add(group);return {group,boxes};
+  sets.forEach((entries,i)=>{const inst=new THREE.InstancedMesh(unitBox,i?darkWood:wallMat,entries.length),matrix=new THREE.Matrix4();entries.forEach(([x,y,z,w,h,d],j)=>{matrix.compose(new THREE.Vector3(x,y,z),new THREE.Quaternion(),new THREE.Vector3(w,h,d));inst.setMatrixAt(j,matrix);});inst.castShadow=true;inst.receiveShadow=true;group.add(inst);});
+  group.visible=!roomKitReady;scene.add(group);return {group,boxes,rooms};
+}
+function rebuildRoomBatches(){
+  for(const mesh of roomBatches){scene.remove(mesh);mesh.dispose();}roomBatches.length=0;if(!roomKitReady)return;
+  const rooms=[...chunkMap.values()].flatMap(c=>c.rooms);
+  const transform=new THREE.Matrix4(),rotation=new THREE.Quaternion(),scale=new THREE.Vector3(1,1,1);
+  for(const type of ROOM_TYPES){const instances=rooms.filter(r=>r.type===type);if(!instances.length)continue;
+    for(const part of roomTemplates.get(type)||[]){const mesh=new THREE.InstancedMesh(part.geometry,part.material,instances.length);instances.forEach((r,i)=>{rotation.setFromAxisAngle(new THREE.Vector3(0,1,0),r.rot);transform.compose(new THREE.Vector3(r.x,r.y,r.z),rotation,scale);mesh.setMatrixAt(i,transform.clone().multiply(part.matrix));});mesh.castShadow=true;mesh.receiveShadow=true;mesh.frustumCulled=false;mesh.name=type;roomBatches.push(mesh);scene.add(mesh);}
+  }
+}
+async function loadRoomKit(){
+  if(roomKitLoading)return;roomKitLoading=true;
+  try{const asset=await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync('models/haunted-rooms.glb');asset.scene.updateMatrixWorld(true);
+    for(const type of ROOM_TYPES){const root=asset.scene.getObjectByName(type);if(!root)throw Error('Missing room '+type);const parts=[];root.traverse(o=>{if(o.isMesh){o.material.side=THREE.FrontSide;for(const key of ['map','normalMap','roughnessMap'])if(o.material[key])o.material[key].anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());parts.push({geometry:o.geometry,material:o.material,matrix:o.matrixWorld.clone()});}});roomTemplates.set(type,parts);}
+    roomKitReady=true;for(const c of chunkMap.values())c.group.visible=false;rebuildRoomBatches();$('#assetStatus').textContent='BLENDER INTERIORS LOADED';
+  }catch(error){$('#assetStatus').textContent='Basic interiors active — detailed assets could not load';console.warn(error);}
 }
 function streamWorld(force=false){
-  const cx=clamp(Math.floor((camera.position.x+20)/40),-12,12),cz=clamp(Math.floor((camera.position.z+20)/40),-12,12),key=`${cx},${cz}`;
+  const cx=clamp(Math.floor((camera.position.x+20)/40),-12,12),cz=clamp(Math.floor((camera.position.z+20)/40),-12,12),key=`${cx},${cz},${quality}`;
   if(key===lastChunkKey&&!force)return;lastChunkKey=key;
   if(!staticBoxes)staticBoxes=staticColliders.map(o=>new THREE.Box3().setFromObject(o));
-  const needed=new Set();for(let x=Math.max(-12,cx-2);x<=Math.min(12,cx+2);x++)for(let z=Math.max(-12,cz-2);z<=Math.min(12,cz+2);z++){const k=`${x},${z}`;needed.add(k);if(!chunkMap.has(k))chunkMap.set(k,buildChunk(x,z));}
+  const radius=presets[quality].radius,needed=new Set();for(let x=Math.max(-12,cx-radius);x<=Math.min(12,cx+radius);x++)for(let z=Math.max(-12,cz-radius);z<=Math.min(12,cz+radius);z++){const k=`${x},${z}`;needed.add(k);if(!chunkMap.has(k))chunkMap.set(k,buildChunk(x,z));}
   for(const [k,c] of chunkMap)if(!needed.has(k)){scene.remove(c.group);c.group.traverse(o=>{if(o.isInstancedMesh)o.dispose();});chunkMap.delete(k);}
-  collisionBoxes=[...staticBoxes,...[...chunkMap.values()].flatMap(c=>c.boxes)];
+  collisionBoxes=[...staticBoxes,...[...chunkMap.values()].flatMap(c=>c.boxes)];rebuildRoomBatches();
 }
+function currentRoom(){const cx=clamp(Math.floor((camera.position.x+20)/40),-12,12),cz=clamp(Math.floor((camera.position.z+20)/40),-12,12),dx=camera.position.x-cx*40,dz=camera.position.z-cz*40;return Math.abs(dx)>2&&Math.abs(dz)>2?roomType(cx,cz,floor,Math.sign(dx),Math.sign(dz)):'Connecting corridor';}
+function applyQuality(value){quality=value in presets?value:'high';const p=presets[quality];renderer.setPixelRatio(Math.min(devicePixelRatio,p.dpr));renderer.setSize(innerWidth,innerHeight);composer.setPixelRatio(Math.min(devicePixelRatio,p.dpr));ssao.enabled=p.ao;bloom.enabled=quality!=='balanced';flashlight.castShadow=true;flashlight.shadow.mapSize.set(p.shadow,p.shadow);if(flashlight.shadow.map){flashlight.shadow.map.dispose();flashlight.shadow.map=null;}streamWorld(true);try{localStorage.setItem('wraithQuality',quality);}catch{}}
 
 const saved=readSave();
 let coins=saved.coins,mode=0,missionIndex=saved.progress[0],activeTool=0,started=false,floor=0,fear=0,sanity=100,stamina=100,alert=0,sleepUntil=0,woodTriggered=false,selectedChar='male',bob=0,lastStep=0;
@@ -209,7 +219,7 @@ $$('.card').forEach(b=>b.onclick=()=>{selectedChar=b.dataset.char;$$('.card').fo
 
 const itemNames=['silver locket','brass key','wax seal','lost field recorder','engraved mirror'];
 const finalKinds=['scan','photo','seal','collect','survive'];
-const missions=Array.from({length:5},(_,m)=>Array.from({length:150},(_,i)=>{const ring=i===0?1:1+(i%11),a=(i*137.5+m*36)*Math.PI/180;const x=Math.round(Math.cos(a)*ring*36/40)*40+5,z=Math.round(Math.sin(a)*ring*36/40)*40+5;return {kind:finalKinds[m],title:['Identify the haunting','Document the apparition','Bind the wraith','Recover the missing kit','Endure the hunt'][m],location:{name:`sector ${Math.round(x/40)}, ${Math.round(z/40)}`,x,z,floor:i%2},item:itemNames[(i+m)%5],stage:0,target:m===4?20:1,progress:0,reward:100,paid:false};}));
+const missions=Array.from({length:5},(_,m)=>Array.from({length:150},(_,i)=>{const ring=i===0?1:1+(i%11),a=(i*137.5+m*36)*Math.PI/180;const x=Math.round(Math.cos(a)*ring*36/40)*40+5,z=Math.round(Math.sin(a)*ring*36/40)*40+5;return {kind:finalKinds[m],title:['Identify the haunting','Document the apparition','Bind the wraith','Recover the missing kit','Endure the hunt'][m],location:{name:`${roomType(Math.round(x/40),Math.round(z/40),i%2,1,1)} · sector ${Math.round(x/40)}, ${Math.round(z/40)}`,x,z,floor:i%2},item:itemNames[(i+m)%5],stage:0,target:m===4?20:1,progress:0,reward:100,paid:false};}));
 const mcur=()=>missions[mode][missionIndex%150];
 const marker=new THREE.Group();const markerOrb=new THREE.Mesh(new THREE.IcosahedronGeometry(.18,1),new THREE.MeshStandardMaterial({color:0xdfff55,emissive:0xdfff55,emissiveIntensity:1}));marker.add(markerOrb);const markerLight=new THREE.PointLight(0xdfff55,1.4,3);marker.add(markerLight);scene.add(marker);
 const note=meshBox('Hint note',[1,1.03,8],[.5,.04,.35],new THREE.MeshStandardMaterial({color:0xdfcda4,roughness:1}));
@@ -217,9 +227,9 @@ meshBox('Sanctuary desk',[1,.8,8],[1.6,.35,.8],darkWood,{collider:true});
 const altar=meshBox('Ritual pedestal',[-2,.55,35],[1.2,1.1,1.2],darkWood,{collider:true});
 const ritualPoint=new THREE.Vector3(-2,1.1,35);
 function placeObjective(){const m=mcur(),l=m.location;note.visible=m.stage===0;marker.position.copy(m.stage===1?new THREE.Vector3(l.x,l.floor*3+.9,l.z):ritualPoint);marker.visible=m.stage>0;}
-function atObjective(){return camera.position.distanceTo(marker.position)<2.5;}
+function atObjective(){const m=mcur();if(floor!==(m.stage===1?m.location.floor:0))return false;return camera.position.distanceTo(marker.position)<2.5;}
 function objectiveText(){const m=mcur();if(m.stage===0)return 'Pick up the handwritten hint from the sanctuary desk (E).';if(m.stage===1)return `Find the ${m.item}: ${m.location.floor?'upper':'ground'} floor, ${m.location.name}, X ${m.location.x} / Z ${m.location.z}.`;return `Bring the ${m.item} to the ritual pedestal. ${m.kind==='scan'?'Scan it with EMF (1 + R).':m.kind==='photo'?'Photograph the ghost near the pedestal (3 + R).':m.kind==='survive'?'Press E at the pedestal to start the 20-second hunt.':'Press E to use the item.'}`;}
-function hud(){const m=mcur();$('#objective').textContent=`${modeNames[mode]} · ${missionIndex+1}/150 — ${objectiveText()}`;$('#journal').innerHTML=`<strong>FIELD JOURNAL</strong><br>${m.stage===0?'No hint collected.':`Hint: ${m.location.floor?'Upstairs':'Ground floor'} · X ${m.location.x}, Z ${m.location.z}<br>Search for: ${m.item}`}<br>Inventory: ${m.stage===2?m.item:'empty'}<br>${inSanctuary(camera.position)?'SANCTUARY — SAFE':`Position X ${Math.round(camera.position.x)}, Z ${Math.round(camera.position.z)}`}<br>${m.stage>0?Math.round(camera.position.distanceTo(marker.position))+' m to '+(m.stage===1?'item':'ritual'):''}`;$('#prog').style.width=Math.min(100,m.progress/m.target*100)+'%';$('#coins').textContent=coins;$('#bal').textContent=coins+' ◈';$('#fear').textContent=Math.round(fear)+'%';$('#fearB').style.width=fear+'%';$('#stam').textContent=Math.round(stamina)+'%';$('#stamB').style.width=stamina+'%';$('#san').textContent=Math.round(sanity)+'%';$('#sanB').style.width=sanity+'%';$('#floor').textContent=(floor?'SECOND FLOOR':'GROUND FLOOR')+` · H: ${saved.injectors} HEALS · Q: ${saved.wards} WARDS`}
+function hud(){const m=mcur();$('#location').textContent=currentRoom().toUpperCase();$('#objective').textContent=`${modeNames[mode]} · ${missionIndex+1}/150 — ${objectiveText()}`;$('#journal').innerHTML=`<strong>FIELD JOURNAL</strong><br>${m.stage===0?'No hint collected.':`Hint: ${m.location.floor?'Upstairs':'Ground floor'} · X ${m.location.x}, Z ${m.location.z}<br>Search for: ${m.item}`}<br>Inventory: ${m.stage===2?m.item:'empty'}<br>${inSanctuary(camera.position)?'SANCTUARY — SAFE':`Position X ${Math.round(camera.position.x)}, Z ${Math.round(camera.position.z)}`}<br>${m.stage>0?Math.round(camera.position.distanceTo(marker.position))+' m to '+(m.stage===1?'item':'ritual'):''}`;$('#prog').style.width=Math.min(100,m.progress/m.target*100)+'%';$('#coins').textContent=coins;$('#bal').textContent=coins+' ◈';$('#fear').textContent=Math.round(fear)+'%';$('#fearB').style.width=fear+'%';$('#stam').textContent=Math.round(stamina)+'%';$('#stamB').style.width=stamina+'%';$('#san').textContent=Math.round(sanity)+'%';$('#sanB').style.width=sanity+'%';$('#floor').textContent=(floor?'SECOND FLOOR':'GROUND FLOOR')+` · H: ${saved.injectors} HEALS · Q: ${saved.wards} WARDS`}
 function advance(n=1){if(!started||!controls.isLocked)return;const m=mcur();if(m.paid||m.stage!==2)return;m.progress=Math.min(m.target,m.progress+n);hud();if(m.progress>=m.target){m.paid=true;huntActive=false;coins+=100;saved.progress[mode]=Math.min(150,missionIndex+1);save();$('#done').textContent=m.title;$('#complete').classList.remove('hidden');controls.unlock();hud();tone(660,.25);}}
 $('#next').onclick=()=>{$('#complete').classList.add('hidden');if(saved.progress[mode]>=150){started=false;$('#menu').classList.remove('hidden');$('#hud').classList.add('hidden');$('#play').textContent='MODE COMPLETE — CHOOSE ANOTHER';return;}missionIndex=saved.progress[mode];placeObjective();hud();controls.lock();};
 $('#play').onclick=()=>{if(saved.progress[mode]>=150)return;audioStart();placeObjective();$('#menu').classList.add('hidden');$('#hud').classList.remove('hidden');started=true;hud();controls.lock()};
@@ -249,7 +259,7 @@ addEventListener('blur',()=>{clearKeys();if(controls.isLocked)controls.unlock();
 
 function interact(){
   if(!started||!controls.isLocked)return;
-  const m=mcur();if(m.stage===0&&camera.position.distanceTo(note.position)<2.5){m.stage=1;placeObjective();tone(520,.2);hud();return;}
+  const m=mcur();if(m.stage===0&&floor===0&&camera.position.distanceTo(note.position)<2.5){m.stage=1;placeObjective();tone(520,.2);hud();return;}
   if(m.stage===1&&atObjective()){m.stage=2;placeObjective();tone(720,.2);hud();return;}
   if(m.stage===2&&atObjective()){if(m.kind==='survive'){huntActive=true;alert=1;}else if(['collect','seal'].includes(m.kind))advance();return;}
   let best=null,bd=2.4;for(const d of doors){const wp=new THREE.Vector3();d.getWorldPosition(wp);wp.y+=1.2;const dist=wp.distanceTo(camera.position);if(dist<bd){bd=dist;best=d}}
@@ -307,20 +317,20 @@ let thirdPerson=false;const loadedCharacters={};
 const followCamera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.04,130);
 function updateInvestigator(){
   investigator.position.set(camera.position.x,feetY,camera.position.z);const look=camera.getWorldDirection(new THREE.Vector3());investigator.rotation.y=Math.atan2(look.x,look.z);ponytail.visible=selectedChar==='female';
-  investigator.visible=started&&thirdPerson&&!loadedCharacters[selectedChar];hands.visible=!thirdPerson;
+  investigator.visible=started&&thirdPerson&&!loadedCharacters[selectedChar];hands.visible=started&&!thirdPerson;
   for(const [key,obj] of Object.entries(loadedCharacters)){obj.visible=started&&thirdPerson&&key===selectedChar;obj.position.copy(investigator.position);obj.rotation.y=investigator.rotation.y;}
   limbs.forEach((limb,i)=>limb.rotation.x=(keys.KeyW||keys.KeyS||keys.KeyA||keys.KeyD)?Math.sin(bob+(i%2)*Math.PI)*.2:0);
-  scenePass.camera=thirdPerson?followCamera:camera;
+  scenePass.camera=thirdPerson?followCamera:camera;ssao.camera=scenePass.camera;
   if(thirdPerson){const target=camera.position.clone();const behind=new THREE.Vector3(-look.x,.05,-look.z).normalize(),ray=new THREE.Ray(target,behind);let distance=3.4;for(const box of collisionBoxes){const hit=ray.intersectBox(box,new THREE.Vector3());if(hit)distance=Math.min(distance,Math.max(.25,target.distanceTo(hit)-.2));}followCamera.position.copy(target).addScaledVector(behind,distance);followCamera.lookAt(target.clone().add(new THREE.Vector3(0,-.25,0)));}
 }
 // Manifest remains disabled until Blender successfully exports every model.
 async function loadBlenderModels(){
-  try{const response=await fetch('models/manifest.json');if(!response.ok)return;const manifest=await response.json();if(!manifest.enabled)return;const loader=new GLTFLoader();
+  try{const response=await fetch('models/manifest.json');if(!response.ok)return;const manifest=await response.json();if(!manifest.enabled)return;const loader=new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
     const asset=await loader.loadAsync('models/'+manifest.ghost);const model=asset.scene;ghost.add(model);for(const child of ghost.children)if(child!==model&&!child.isLight)child.visible=false;
     for(const key of ['male','female']){const gltf=await loader.loadAsync('models/'+manifest[key]);gltf.scene.visible=false;scene.add(gltf.scene);loadedCharacters[key]=gltf.scene;}
   }catch(error){console.warn('Blender assets unavailable; using procedural characters.',error.message);}
 }
-if(typeof fetch==='function')loadBlenderModels();
+if(typeof fetch==='function'){loadBlenderModels();loadRoomKit();}
 
 function inSanctuary(p){return Math.hypot(p.x,p.z-8.8)<SAFE_RADIUS;}
 function updateGhost(dt,now){
@@ -338,7 +348,7 @@ function updateGhost(dt,now){
   if(sanity<=0){$('#failed').classList.remove('hidden');controls.unlock();tone(45,.8);}
 }
 function nearbyTips(){
-  if(mcur().stage===0&&camera.position.distanceTo(note.position)<2.5){tip('E · PICK UP HINT');return;}
+  if(mcur().stage===0&&floor===0&&camera.position.distanceTo(note.position)<2.5){tip('E · PICK UP HINT');return;}
   if(atObjective()&&marker.visible){tip(mcur().stage===1?'E · PICK UP '+mcur().item.toUpperCase():mcur().kind==='scan'?'1 + R · USE ITEM WITH EMF':mcur().kind==='photo'?'3 + R · PHOTOGRAPH GHOST':'E · USE COLLECTED ITEM');return;}
   if(onStairs(camera.position)){tip('WALK UP / DOWN · SPACE TO JUMP');return;}
   tip('');
@@ -361,5 +371,7 @@ function loop(now){
 requestAnimationFrame(loop);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();followCamera.aspect=camera.aspect;followCamera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);composer.setSize(innerWidth,innerHeight)});
 streamWorld(true);placeObjective();hud();
+$('#quality').onchange=e=>applyQuality(e.target.value);
+try{const q=localStorage.getItem('wraithQuality');if(q&&q in presets){$('#quality').value=q;applyQuality(q);}}catch{}
 </script>
 </body></html>

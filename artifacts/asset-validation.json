@@ -1,0 +1,49 @@
+{
+  "blender_version": "4.3.2",
+  "assets": [
+    {
+      "file": "haunted-rooms.glb",
+      "bytes": 2173740,
+      "sha256": "931c4739e63ddb8fb74722c6bc46c5e359aafbcb336e0e49a396b4961d5a90d2",
+      "generator": "glTF-Transform v4.2.1",
+      "mesh_count": 6,
+      "extensions": [
+        "EXT_meshopt_compression",
+        "KHR_mesh_quantization"
+      ]
+    },
+    {
+      "file": "maya.glb",
+      "bytes": 74356,
+      "sha256": "493a7cb3d1851807e8b40dfdc8360b80fb875bf79b5a373df4e85e562933cd25",
+      "generator": "glTF-Transform v4.2.1",
+      "mesh_count": 47,
+      "extensions": [
+        "EXT_meshopt_compression",
+        "KHR_mesh_quantization"
+      ]
+    },
+    {
+      "file": "ghost.glb",
+      "bytes": 56084,
+      "sha256": "871a95c9ce92a694ffc717f1fb1c8c83d71f4e52e778664a9729e841002aaa53",
+      "generator": "glTF-Transform v4.2.1",
+      "mesh_count": 22,
+      "extensions": [
+        "EXT_meshopt_compression",
+        "KHR_mesh_quantization"
+      ]
+    },
+    {
+      "file": "ethan.glb",
+      "bytes": 68364,
+      "sha256": "6e8b496a29f163b06dfb3da181a4969379c29b9153b16fb1278a27b1c76afd32",
+      "generator": "glTF-Transform v4.2.1",
+      "mesh_count": 36,
+      "extensions": [
+        "EXT_meshopt_compression",
+        "KHR_mesh_quantization"
+      ]
+    }
+  ]
+}
